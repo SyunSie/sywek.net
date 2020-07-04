@@ -1,6 +1,5 @@
 <template>
   <div>
-    <main>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptates dolores quos cupiditate quo accusamus rem expedita nam qui. Eius explicabo praesentium itaque similique facere alias mollitia incidunt architecto voluptatem sunt!</main>
     <sywekArticle />
   </div>
 </template>
@@ -9,9 +8,12 @@
 import sywekArticle from "../../components/article/";
 export default {
   name: "newArticle",
-  components: { sywekArticle }
+  components: { sywekArticle },
 };
 </script>
 
-<style>
+<style scoped>
+div {
+  height: 100%;
+}
 </style>

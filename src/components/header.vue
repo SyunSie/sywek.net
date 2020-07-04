@@ -1,6 +1,6 @@
 <template>
   <div class="webHeader">
-    <h1>TodoList</h1>
+    <h1>Sywek</h1>
     <div id="nav">
       <router-link to="/">Home</router-link>|
       <router-link to="/newArticle">New Article</router-link>
@@ -10,14 +10,17 @@
 
 <script>
 export default {
-  name: "webHeader"
+  name: "webHeader",
 };
 </script>
 
 <style scoped>
+.webHeader h1 {
+  margin: 0;
+}
 .webHeader {
-  background: white;
-  color: #000;
+  background: transparent;
+  color: #fff;
   text-align: right;
   padding-right: 20px;
 }
