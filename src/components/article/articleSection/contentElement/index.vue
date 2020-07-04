@@ -377,7 +377,7 @@ export default {
         sectionIndex: this.sectionIndex,
         contentEleIndex: this.contentEleIndex
       });
-      this.contentTypeSelTools_display = false; // 不將button 收回 會沒辦法update contentEle
+      //this.contentTypeSelTools_display = false; // 不將button 收回 會沒辦法update contentEle
       //if (needUpdate) this.$forceUpdate();
     },
     _setFocus() {
@@ -398,11 +398,15 @@ export default {
     _createSection() {
       if (!this.editable) return;
 
-      this.createSection({ baseSectionIndex: this.sectionIndex });
-      this.createContentEle({
+      this.createSection({
+        baseSectionIndex: this.sectionIndex,
+        baseContentEleIndex: this.contentEleIndex
+      });
+
+      /* this.createContentEle({
         sectionIndex: this.sectionIndex + 1,
         contentEleIndex: 0
-      });
+      });*/
     },
     _videoUrlFormat(e) {
       if (!this.editable) return;

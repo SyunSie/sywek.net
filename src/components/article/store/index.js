@@ -1,4 +1,4 @@
-//import Vue from "vue";
+import Vue from "vue";
 const state = {
   article: {
     articleFormatVersion: "0.1.0",
@@ -162,49 +162,83 @@ const mutations = {
     console.log("updateArticleInfo", articleInfo);
     articleInfo.postDateTime = { ...state.article.articleInfo.postDateTime };
 
-    state.article.articleInfo = {
+    Vue.set(state.article, "articleInfo", articleInfo);
+    /*state.article.articleInfo = {
       ...articleInfo,
-    };
+    };*/
   },
   /////article content
   updateContentEle(state, { contentEle, sectionIndex, contentEleIndex }) {
     console.log("UpdateContentEle", contentEle, sectionIndex, contentEleIndex);
-    if (state.article.sections.length <= sectionIndex || state.article.sections[sectionIndex].contentElements.length <= contentEleIndex)
-      return console.log("not found contentElement error.");
+    //if (state.article.sections.length <= sectionIndex || state.article.sections[sectionIndex].contentElements.length <= contentEleIndex)
+    //  return console.log("not found contentElement error.");
 
-    state.article.sections[sectionIndex].contentElements[contentEleIndex] = contentEle;
+    Vue.set(state.article.sections[sectionIndex].contentElements, contentEleIndex, contentEle);
+    //state.article.sections[sectionIndex].contentElements[contentEleIndex] = contentEle;
   },
   createContentEle(state, { sectionIndex, contentEleIndex }) {
     console.log("CreateContentEle", sectionIndex, contentEleIndex);
 
-    /* state.article.sections[sectionIndex].contentElements.splice(contentEleIndex + 1, 0, {});
-    Vue.set(state.article.sections[sectionIndex].contentElements, contentEleIndex + 1, {
-      contentType: undefined,
-      content: { text: "" },
-      jumpLines: 0,
-    });*/
     state.article.sections[sectionIndex].contentElements.splice(contentEleIndex + 1, 0, {
       contentType: undefined,
       content: { text: "" },
       jumpLines: 0,
     });
+    //Vue.set(state.article.sections[sectionIndex].contentElements, contentEleIndex + 1, );
+    /*state.article.sections[sectionIndex].contentElements.splice(contentEleIndex + 1, 0, {
+      contentType: undefined,
+      content: { text: "" },
+      jumpLines: 0,
+    });*/
   },
   deleteContentEle(state, { sectionIndex, contentEleIndex }) {
     console.log("DeleteContentEle", sectionIndex, contentEleIndex);
     state.article.sections[sectionIndex].contentElements.splice(contentEleIndex, 1);
 
+    //Remove section when it's contentElements is empty.
     if (state.article.sections[sectionIndex].contentElements.length <= 0) {
       console.log("DeleteSectionIndex:when contentEles is empty.", sectionIndex);
       state.article.sections.splice(sectionIndex, 1);
+
+      if (state.article.sections.length == 0) {
+        state.article.sections.splice(0, 0, {
+          contentElements: [
+            {
+              contentType: undefined,
+              content: { text: "" },
+              jumpLines: 0,
+            },
+          ],
+        });
+      }
     }
   },
 
-  createSection(state, { baseSectionIndex }) {
-    console.log("CreateSection", baseSectionIndex);
+  createSection(state, { baseSectionIndex, baseContentEleIndex }) {
+    console.log("CreateSection", baseSectionIndex, baseContentEleIndex);
+    let baseSCEleLength = state.article.sections[baseSectionIndex].contentElements.length;
 
-    state.article.sections.splice(baseSectionIndex + 1, 0, {
-      contentElements: [],
-    });
+    //true :is last contentEle
+    //false : need migration contentEles which index greater than baseContentEleIndex
+    if (baseSCEleLength == baseContentEleIndex + 1) {
+      console.log("CreateSection", "-create new section and contentEle.");
+      state.article.sections.splice(baseSectionIndex + 1, 0, {
+        contentElements: [
+          {
+            contentType: undefined,
+            content: { text: "" },
+            jumpLines: 0,
+          },
+        ],
+      });
+    } else {
+      console.log("CreateSection", "-migrate contentEles.");
+      let migrateStartEleIndex = baseContentEleIndex + 1;
+      let migrateContentEles = state.article.sections[baseSectionIndex].contentElements.splice(migrateStartEleIndex, baseSCEleLength - migrateStartEleIndex);
+
+      state.article.sections.splice(baseSectionIndex + 1, 0, { contentElements: migrateContentEles });
+      //Vue.set(state.article.sections[baseSectionIndex + 1], "contentElements", migrateContentEles);
+    }
   },
 };
 

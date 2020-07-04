@@ -33,7 +33,7 @@ export default {
   components: { articleSection, articleHeader, articleFooter },
   data: () => {
     return {
-      editable: true
+      editable: false
     };
   },
   computed: {

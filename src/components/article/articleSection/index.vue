@@ -1,6 +1,6 @@
 <template>
   <section>
-    <div class="section_layout">
+    <div class="section_layout" :class="editable?'sectionBorder':null">
       <contentElement
         v-for="(contentEle, contentEleIndex) in section.contentElements"
         v-bind:key="contentEleIndex"
@@ -40,5 +40,17 @@ export default {
   margin: 0 auto;
   box-sizing: border-box;
   position: relative;
+  border-color: transparent;
+  border-style: dashed;
+  border-width: 0.01rem;
+}
+
+/*Section border  */
+
+.sectionBorder:focus-within {
+  border-radius: 0.2rem;
+  border-color: orange;
+  border-width: 0.01rem;
+  border-style: dashed;
 }
 </style>
