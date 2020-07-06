@@ -21,6 +21,7 @@ export default {
   display: block;
 }
 body {
+  /*/ background-color: rgb(33, 35, 37);*/
   background-color: rgba(0, 0, 0, 1);
   color: #eee;
   margin: 0;

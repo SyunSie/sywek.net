@@ -1,24 +1,27 @@
 <template>
-  <main>
-    <article>
-      <articleHeader
-        v-bind:articleInfo="cloneDeep(getArticle.articleInfo)"
-        v-bind:readerInfo="getArticle.readerInfo"
-        v-bind:authorInfo="getArticle.authorInfo"
-        v-bind:editable="editable"
-      />
-      <hr />
-      <articleSection
-        v-bind:section="section"
-        v-bind:key="sectionIndex"
-        v-bind:sectionIndex="sectionIndex"
-        v-bind:editable="editable"
-        v-for="(section, sectionIndex) in getArticle.sections"
-      />
-      <hr />
-      <articleFooter />
-    </article>
-  </main>
+  <div>
+    <articleNav />
+    <main>
+      <article>
+        <articleHeader
+          v-bind:articleInfo="cloneDeep(getArticle.articleInfo)"
+          v-bind:readerInfo="getArticle.readerInfo"
+          v-bind:authorInfo="getArticle.authorInfo"
+          v-bind:editable="editable"
+        />
+        <hr id="articleHeader_hr" />
+        <articleSection
+          v-bind:section="section"
+          v-bind:key="sectionIndex"
+          v-bind:sectionIndex="sectionIndex"
+          v-bind:editable="editable"
+          v-for="(section, sectionIndex) in getArticle.sections"
+        />
+        <hr id="articleFooter_hr" />
+        <articleFooter />
+      </article>
+    </main>
+  </div>
 </template>
 
 <script>
@@ -26,11 +29,12 @@ import _ from "lodash";
 import articleSection from "./articleSection";
 import articleHeader from "./articleHeader";
 import articleFooter from "./articleFooter";
+import articleNav from "./articleNav";
 import { createNamespacedHelpers } from "vuex";
 const { mapGetters } = createNamespacedHelpers("articleStore");
 export default {
   name: "sywekArticle",
-  components: { articleSection, articleHeader, articleFooter },
+  components: { articleSection, articleHeader, articleFooter, articleNav },
   data: () => {
     return {
       editable: false

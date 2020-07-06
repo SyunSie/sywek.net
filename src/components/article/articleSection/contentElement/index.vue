@@ -236,7 +236,6 @@
       </div>-->
     </div>
     <div class="contentEleTool_layout" v-if="editable">
-      <button @click="udpateNav">testtesttest</button>
       <button @click="_createContentEle" class="toolBtn">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -296,7 +295,7 @@ export default {
       "createContentEle",
       "createSection",
       "deleteContentEle",
-      "udpateNav"
+      "updateNav"
     ]),
     blur_listener(e, contentType) {
       if (!this.editable) return;
@@ -345,11 +344,20 @@ export default {
       this.contentEle.contentType = contentType;
       this.contentTypeSelTools_display = false;
       this.setFocusOnEditTag = true;
-      "".normalize;
+
       this._updateContentEle();
 
       if (contentType == "section") {
         this._createSection();
+      }
+
+      if (
+        contentType == "section" ||
+        contentType == "header" ||
+        contentType == "subTitle"
+      ) {
+        console.log("ele update nav");
+        this.updateNav();
       }
     },
     _createContentEle() {
@@ -381,20 +389,32 @@ export default {
       //if (needUpdate) this.$forceUpdate();
     },
     _setFocus() {
+      console.log("setFocus");
       if (!this.editable) return;
 
       let el = this.$refs.editContentText;
-
       if (el == undefined) return;
+
+      //get content editable tag
+      if (el.contentEditable == false) {
+        let childIndex = el.childNodes.findIndex(cTag => {
+          return cTag.contentEditable == true;
+        });
+        if (childIndex == -1) return;
+        el = el.childNodes[childIndex];
+      }
+
       let range = document.createRange();
       let sel = window.getSelection();
 
-      range.setStart(el.childNodes[0], 0);
+      range.setStart(el, 0);
       range.collapse();
 
       sel.removeAllRanges();
       sel.addRange(range);
+      this.setFocusOnEditTag = false;
     },
+
     _createSection() {
       if (!this.editable) return;
 
@@ -448,7 +468,6 @@ export default {
     if (!this.setFocusOnEditTag) return;
 
     this._setFocus();
-    this.setFocusOnEditTag = false;
   }
 };
 </script>
