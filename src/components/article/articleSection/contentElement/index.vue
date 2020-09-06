@@ -1,5 +1,5 @@
 <template>
-  <div class="contentEle_layout">
+  <div class="contentEle_layout" ref="baseContent">
     <div
       class="content_layout"
       :class="editable?'editableRangeHover':''"
@@ -7,12 +7,12 @@
         contentEle.contentType == undefined || contentEle.content == undefined || contentTypeSelTools_display == true
       "
     >
-      <input
+      <!-- <input
         id="imgFileDialog_input"
         ref="imgFileDialog_input"
         type="file"
         accept=".jpg, .jpeg, .bmp"
-      />
+      />-->
       <button
         class="btn_contentTypeToolManager"
         v-if="
@@ -21,43 +21,15 @@
         "
         @click="contentTypeSelTools_display = true"
       >+</button>
-
-      <button
-        class="btn_contentTypeSelTools"
-        value="text"
-        v-if="contentTypeSelTools_display"
-        @click="setContentType"
-      >Text</button>
-      <button
-        class="btn_contentTypeSelTools"
-        value="image"
-        v-if="contentTypeSelTools_display"
-        @click="setContentType"
-      >Image</button>
-      <button
-        class="btn_contentTypeSelTools"
-        value="video"
-        v-if="contentTypeSelTools_display"
-        @click="setContentType"
-      >Video</button>
-      <button
-        class="btn_contentTypeSelTools"
-        value="section"
-        v-if="contentTypeSelTools_display"
-        @click="setContentType"
-      >Section</button>
-      <button
-        class="btn_contentTypeSelTools"
-        value="subTitle"
-        v-if="contentTypeSelTools_display"
-        @click="setContentType"
-      >Sub Title</button>
-      <button
-        class="btn_contentTypeSelTools"
-        value="header"
-        v-if="contentTypeSelTools_display"
-        @click="setContentType"
-      >header</button>
+      <div v-if="contentTypeSelTools_display">
+        <button
+          v-for="(t,index) in elementTypes"
+          :key="index"
+          class="btn_contentTypeSelTools"
+          :value="t"
+          @click="setContentType"
+        >{{t}}</button>
+      </div>
     </div>
 
     <div class="content_layout" v-else :class="editable?'editableRangeHover':''">
@@ -67,7 +39,6 @@
         v-bind:contentEditable="editable"
         @blur="blur_listener($event, 'text')"
         @keydown.ctrl.enter="_createContentEle"
-        ref="editContentText"
         v-html="contentEle.content.text"
       ></p>
       <!--content image-->
@@ -77,12 +48,16 @@
           class="imageContet_imageAndCpation_layout"
           v-bind:class="[contentEle.contentStyle=='left-textAround'?'imageTextAroundLeft':contentEle.contentStyle=='right-textAround'?'imageTextAroundRight':'imageFitWidth' ]"
         >
-          <img v-bind:src="contentEle.content.imageUrl" />
+          <img
+            @click="zoomImageEventFunc"
+            :class="!editable?'zoomCursor':null  "
+            v-bind:src="contentEle.content.imageUrl"
+          />
           <figcaption
             class="imageContent_Caption"
             aria-placeholder="Figure caption..."
             v-bind:contentEditable="editable"
-            ref="editContentText"
+            @blur="blur_listener($event, 'imageCaption')"
           >{{ contentEle.content.imageCaption }}</figcaption>
         </figure>
 
@@ -124,9 +99,8 @@
         @keydown.ctrl.enter="_createContentEle"
         @blur="blur_listener($event, 'text')"
         v-html="contentEle.content.text"
-        ref="editContentText"
       ></h2>
-      <!--header-->
+      <!--content header-->
       <h3
         :id="contentEle.navId"
         v-else-if="contentEle.contentType == 'header'"
@@ -134,8 +108,35 @@
         @keydown.ctrl.enter="_createContentEle"
         @blur="blur_listener($event, 'text')"
         v-html="contentEle.content.text"
-        ref="editContentText"
       ></h3>
+      <!-- content code -->
+
+      <code v-if="contentEle.contentType=='code'">
+        <div class="code">
+          <div
+            class="codeHeader"
+            v-bind:contentEditable="editable"
+            @blur="blur_listener($event, 'title')"
+            v-text="contentEle.content.title"
+          ></div>
+          <div class="codeTable">
+            <table>
+              <tbody>
+                <tr v-for="(item,index) in contentEle.content.code" :key="index">
+                  <td class="tdLine">{{index+1}}</td>
+                  <td
+                    class="tdCode"
+                    v-bind:contentEditable="editable"
+                    v-text="item"
+                    @keydown="codeKeyDown($event,index)"
+                    @blur="blur_listener($event, 'code',index)"
+                  ></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </code>
     </div>
     <div class="contentTool_layout" v-if="editable && contentEle.contentType=='image' ">
       <div class="imageTool" v-if="contentEle.contentType=='image'">
@@ -278,6 +279,8 @@
 
 <script>
 import { createNamespacedHelpers } from "vuex";
+import { elementTypes } from "./elementParam";
+import { searchContenteditableTag } from "../../../../reference/tagFunctions";
 const { mapMutations } = createNamespacedHelpers("articleStore");
 export default {
   name: "contentElement",
@@ -285,19 +288,123 @@ export default {
     return {
       contentTypeSelTools_display: false,
       secondSel_display: undefined,
-      setFocusOnEditTag: false
+      setFocusOnEditTag: false,
+      elementTypes: elementTypes,
+      testCodeTypeData: {
+        contentType: "code",
+        content: {
+          title: "code test",
+          code: ["line 1", "line 2", "line 3", "line 4", "line 5"],
+        },
+      },
+      setFocusInfo: {
+        el: undefined,
+        nodeIndex: 0,
+        startOffset: 0,
+      },
     };
   },
   props: ["contentEle", "sectionIndex", "contentEleIndex", "editable"],
+
   methods: {
     ...mapMutations([
       "updateContentEle",
       "createContentEle",
       "createSection",
       "deleteContentEle",
-      "updateNav"
+      "updateNav",
     ]),
-    blur_listener(e, contentType) {
+    codeKeyDown(e, _index) {
+      //detect if keydown the backspace and caret on head
+      if (e.key == "Backspace" && _index != 0) {
+        let _sel = window.getSelection();
+        if (_sel.anchorOffset == 0 && _sel.focusOffset == 0) {
+          console.log("asd");
+          let _nextEl =
+            e.target.parentElement.parentElement.childNodes[_index - 1]
+              .childNodes[1];
+
+          this.setFocusInfo.el = _nextEl;
+          this.setFocusInfo.startOffset =
+            this.contentEle.content.code[_index - 1].length + 1;
+          this.setFocusInfo.nodeIndex = 0;
+
+          let _delRowStr = e.target.innerText;
+
+          this.contentEle.content.code.splice(_index, 1);
+          this.contentEle.content.code[_index - 1] += " " + _delRowStr;
+
+          this.setFocusOnEditTag = true;
+          this._updateContentEle();
+        }
+      }
+    },
+    zoomImageEventFunc(e) {
+      if (this.editable) return;
+      // passing when img was zoom.
+      let _el = e.target.parentElement;
+      if (_el.classList.contains("imgZoomEvent")) return;
+      event.stopPropagation();
+      let _body = document.querySelector("body");
+      // add zoom class
+      _el.classList.add("imgZoomEvent");
+      e.target.classList.add("zoom");
+      //create style ,the style using for transfrom
+      let _transfromStyle = document.createElement("style");
+      _transfromStyle.type = "text/css";
+
+      const _head = document.querySelector("head");
+      //declare image size and other infos
+      const _imageW = 800,
+        _imageH = 500,
+        _maxImageH = 600;
+      let _margin = 20;
+      _head.appendChild(_transfromStyle);
+      let _scrollPass = false;
+      let _resizeFunc = () => {
+        // zoom image scale will fit the width
+        // e1 =>  zoom image height > _maxImageH
+        // e2 =>  zoom image height > _cheight
+
+        let _cwidth = _body.clientWidth - _margin * 2;
+        let _Rate = _cwidth / _imageW;
+        let _cheight = _body.clientHeight - _margin * 2;
+
+        // if zoom scale will let image-y out of viewport then change _Rate.
+        if (_Rate * _imageH >= _maxImageH) {
+          _Rate = _maxImageH / _imageH;
+        }
+        if (_Rate * _imageH >= _cheight) {
+          _Rate = _cheight / _imageH;
+        }
+        //caculate zoom scale and traslate and change innerHTML
+        _transfromStyle.innerHTML = `.zoom{transform: scale(${_Rate}) translate(${
+          (_cwidth - _imageW) / 2 / _Rate + _margin / _Rate
+        }px, ${(_cheight - _imageH) / 2 / _Rate + _margin / _Rate}px);}`;
+        _scrollPass = false;
+      };
+      let _zoomBlurFunc = (_e) => {
+        // pass fist time scroll.
+        if (_e.type == "scroll")
+          if (!_scrollPass) {
+            _scrollPass = true;
+            return;
+          }
+        _head.removeChild(_transfromStyle);
+        _body.onresize = undefined;
+        _el.classList.remove("imgZoomEvent");
+        e.target.classList.remove("zoom");
+        _body.removeEventListener("click", _zoomBlurFunc);
+        _body.removeEventListener("scroll", _zoomBlurFunc);
+      };
+
+      _body.addEventListener("click", _zoomBlurFunc);
+      _body.addEventListener("scroll", _zoomBlurFunc);
+
+      _body.onresize = _resizeFunc;
+      _resizeFunc();
+    },
+    blur_listener(e, contentType, _index = undefined) {
       if (!this.editable) return;
 
       if (contentType == "text") {
@@ -309,6 +416,25 @@ export default {
           .replace(/(?:\r\n|\r|\n)/g, "<br>");
 
         //this.$forceUpdate();
+      } else if (contentType == "imageCaption") {
+        this.contentEle.content.imageCaption = e.target.innerText
+          .replace()
+          .replace(/<[^>]*>/, "")
+          .replace(/(?:\r\n|\r|\n)/g, " ");
+      } else if (contentType == "code") {
+        let _code = e.target.innerText.split(/(?:\r\n|\r|\n)/g);
+
+        if (_index >= this.contentEle.content.code.length) return;
+
+        this.contentEle.content.code.splice(_index, 1);
+        _code.map((v, i) => {
+          this.contentEle.content.code.splice(_index + i, 0, v);
+        });
+      } else if (contentType == "title") {
+        this.contentEle.content.title = e.target.innerText
+          .replace(/<[^>]*>/, "")
+          .replace(/(?:\r\n|\r|\n)/g, " ");
+        console.log(this.contentEle.content.title);
       }
       this._updateContentEle();
     },
@@ -316,17 +442,17 @@ export default {
       if (!this.editable) return;
 
       let contentType = e.target.value;
-      console.log("setContentType...");
+
       //contentType step
       if (contentType == "image") {
-        let el = this.$refs.imgFileDialog_input;
-
+        // let el = this.$refs.imgFileDialog_input;
+        let el = document.getElementById("imgFileDialog_input");
         //using promise ,waitting img->base64 process done.
         let readImgPromise = new Promise((resolve, reject) => {
-          el.addEventListener("change", e => {
+          el.addEventListener("change", (e) => {
             if (e.target.files != undefined) {
               let _reader = new FileReader();
-              _reader.onload = e => {
+              _reader.onload = (e) => {
                 resolve(e.target.result);
               };
               _reader.readAsDataURL(e.target.files[0]);
@@ -341,22 +467,29 @@ export default {
 
         this.contentEle.content.imageUrl = await readImgPromise;
       }
+
       this.contentEle.contentType = contentType;
       this.contentTypeSelTools_display = false;
       this.setFocusOnEditTag = true;
+
+      this.setFocusInfo.el = this.$refs.baseContent;
+      this.setFocusInfo.startOffset = 0;
+      this.setFocusInfo.nodeIndex = undefined;
 
       this._updateContentEle();
 
       if (contentType == "section") {
         this._createSection();
       }
-
+      if (contentType == "code") {
+        this.contentEle.content.code = [""];
+        this.contentEle.content.title = "";
+      }
       if (
         contentType == "section" ||
         contentType == "header" ||
         contentType == "subTitle"
       ) {
-        console.log("ele update nav");
         this.updateNav();
       }
     },
@@ -365,7 +498,7 @@ export default {
 
       this.createContentEle({
         sectionIndex: this.sectionIndex,
-        contentEleIndex: this.contentEleIndex
+        contentEleIndex: this.contentEleIndex,
       });
     },
     _updateContentEle() {
@@ -374,7 +507,7 @@ export default {
       this.updateContentEle({
         contentEle: this.contentEle,
         sectionIndex: this.sectionIndex,
-        contentEleIndex: this.contentEleIndex
+        contentEleIndex: this.contentEleIndex,
       });
     },
     _deleteContentEle() {
@@ -383,36 +516,26 @@ export default {
       //let needUpdate = this.contenteEle == undefined ? true : false;
       this.deleteContentEle({
         sectionIndex: this.sectionIndex,
-        contentEleIndex: this.contentEleIndex
+        contentEleIndex: this.contentEleIndex,
       });
       //this.contentTypeSelTools_display = false; // 不將button 收回 會沒辦法update contentEle
       //if (needUpdate) this.$forceUpdate();
     },
-    _setFocus() {
-      console.log("setFocus");
+    _setFocus(el, childIndex, offset = 0) {
       if (!this.editable) return;
+      let _tag = searchContenteditableTag(el);
 
-      let el = this.$refs.editContentText;
-      if (el == undefined) return;
+      _tag = childIndex != undefined ? _tag.childNodes[childIndex] : _tag;
 
-      //get content editable tag
-      if (el.contentEditable == false) {
-        let childIndex = el.childNodes.findIndex(cTag => {
-          return cTag.contentEditable == true;
-        });
-        if (childIndex == -1) return;
-        el = el.childNodes[childIndex];
-      }
+      if (!_tag) return;
 
       let range = document.createRange();
       let sel = window.getSelection();
 
-      range.setStart(el, 0);
-      range.collapse();
-
+      range.setStart(_tag, offset);
+      range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);
-      this.setFocusOnEditTag = false;
     },
 
     _createSection() {
@@ -420,7 +543,7 @@ export default {
 
       this.createSection({
         baseSectionIndex: this.sectionIndex,
-        baseContentEleIndex: this.contentEleIndex
+        baseContentEleIndex: this.contentEleIndex,
       });
 
       /* this.createContentEle({
@@ -436,7 +559,7 @@ export default {
       if (!videoUrlStr.includes("www.youtube.com")) return;
       if (videoUrlStr.includes("/embed/")) {
         this.contentEle.content = {
-          videoUrl: videoUrlStr
+          videoUrl: videoUrlStr,
         };
         //this.contentEle.content.videoUrl = videoUrlStr;
       } else if (videoUrlStr.includes("watch?v=")) {
@@ -445,7 +568,7 @@ export default {
         if (urlStrs.length < 2) return;
 
         this.contentEle.content = {
-          videoUrl: "https://www.youtube.com/embed/" + urlStrs[1]
+          videoUrl: "https://www.youtube.com/embed/" + urlStrs[1],
         };
       } else return;
 
@@ -459,7 +582,7 @@ export default {
       this.contentEle.contentStyle = e.target.value;
       this._updateContentEle();
       //this.$forceUpdate();
-    }
+    },
   },
 
   updated() {
@@ -467,8 +590,13 @@ export default {
 
     if (!this.setFocusOnEditTag) return;
 
-    this._setFocus();
-  }
+    this._setFocus(
+      this.setFocusInfo.el,
+      this.setFocusInfo.nodeIndex,
+      this.setFocusInfo.startOffset
+    );
+    this.setFocusOnEditTag = false;
+  },
 };
 </script>
 
@@ -554,14 +682,14 @@ h3 {
 .imageFitWidth img {
   width: 100%;
 }
-#imgFileDialog_input {
+/* #imgFileDialog_input {
   display: none;
   width: 0;
   height: 0;
-}
+} */
 .imageContet_imageAndCpation_layout img {
-  min-width: 400px;
-  min-height: 400px;
+  /* min-width: 400px; */
+  max-height: 500px;
   text-align: left;
   background-color: #aaa;
   border-color: transparent;
@@ -574,7 +702,8 @@ h3 {
 .imageContent_Caption {
   text-align: center;
   margin-top: 0;
-  font-size: 1rem;
+  font-size: 0.8rem;
+  color: #777;
 }
 .imageContent_asideText {
   width: 100%;
@@ -605,7 +734,7 @@ button {
   color: #fff;
 }
 
-[contentEditable="true"]:empty:not(:focus):before {
+[contentEditable="true"]:empty:not(:focus):not(td):before {
   content: "type somthing...";
   color: #aa8;
 }
@@ -625,5 +754,67 @@ button {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+.zoomCursor {
+  cursor: zoom-in;
+}
+.imgZoomEvent > img {
+  cursor: zoom-out !important;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 800px !important;
+  height: 500px !important;
+
+  transition: transform 200ms;
+  z-index: 1200;
+}
+.imgZoomEvent::after {
+  display: block;
+  content: "";
+  position: fixed;
+  z-index: 1199;
+  background-color: rgba(33, 33, 33, 0.98);
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  filter: blur(1px);
+}
+.code {
+  border-radius: 1rem;
+  border: #333 solid 1px;
+  background-color: rgba(17, 17, 17, 0.76);
+  overflow-y: hidden;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+.codeHeader {
+  white-space: nowrap;
+  overflow: hidden;
+  width: 80%;
+  font-size: 1rem;
+  border-bottom: #333 solid 1px;
+  padding: 0.5rem 0;
+  padding-left: 1rem;
+  outline: none;
+}
+.tdLine {
+  /* font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif; */
+  font-size: 0.8rem;
+  width: 2rem;
+  text-align: right;
+  padding: 0.3rem 1rem;
+  color: #555;
+}
+.tdCode {
+  padding-left: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 1rem;
+  min-width: 400px;
+}
+
+@media screen {
 }
 </style>

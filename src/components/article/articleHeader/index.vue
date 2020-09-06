@@ -1,17 +1,34 @@
 <template>
   <header class="article_header">
     <div class="article_header_layout">
+      <input
+        v-if="editable && !articleInfo.headerImage "
+        class="selHeaderImage"
+        @click="showImageSelDialog"
+        type="button"
+        value="Select Header Image"
+      />
+      <figure
+        class="headerImageFig"
+        v-if="articleInfo.headerImage"
+        @click="showImageSelDialog"
+        :class="editable ? 'editableRangeHover' : ''"
+      >
+        <img :src="articleInfo.headerImage" />
+      </figure>
       <h1
+        @click="_setFocus($event.target,null)"
         v-bind:contentEditable="editable"
-        @blur="_updateArticleInfo($event,'header')"
-        :class="editable?'editableRangeHover':''"
+        @blur="_updateArticleInfo($event, 'header')"
+        :class="editable ? 'editableRangeHover' : ''"
         v-html="articleInfo.header"
       ></h1>
       <h5
+        @click="_setFocus($event.target,null)"
         class="surColor"
         v-bind:contentEditable="editable"
-        @blur="_updateArticleInfo($event,'secondHeader')"
-        :class="editable?'editableRangeHover':''"
+        @blur="_updateArticleInfo($event, 'secondHeader')"
+        :class="editable ? 'editableRangeHover' : ''"
         v-html="articleInfo.secondHeader"
       ></h5>
       <div class="articleInfo_layout">
@@ -19,7 +36,10 @@
           <div class="authorInfo_layout">
             <img class="authorInfo_pic" v-bind:src="authorInfo.authorPicture" />
             <div class="authorLink_btn">
-              <button value="facebook">
+              <button
+                value="facebook"
+                @click="authorSocialBtnClick($event,authorInfo.links.facebook)"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1850 1850">
                   <path
                     class="svg-itemColor"
@@ -27,7 +47,10 @@
                   />
                 </svg>
               </button>
-              <button value="twitter">
+              <button
+                value="twitter"
+                @click="authorSocialBtnClick($event,authorInfo.links.twitter)"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -49,7 +72,10 @@
                   </g>
                 </svg>
               </button>
-              <button value="instagram">
+              <button
+                value="instagram"
+                @click="authorSocialBtnClick($event,authorInfo.links.instagram)"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -105,7 +131,7 @@
                   </metadata>
                 </svg>
               </button>
-              <button value="github">
+              <button value="github" @click="authorSocialBtnClick($event,authorInfo.links.github)">
                 <svg
                   class="svg-itemColor"
                   xmlns="http://www.w3.org/2000/svg"
@@ -142,12 +168,12 @@
 
         <div class="articleInfo_layout_right">
           <span style="font-size:1.2rem; color:pink;" v-if="editable">*Click tag to delete it.</span>
-          <div class="tagBtns_layout" :class="editable?'editableRangeHover':''">
+          <div class="tagBtns_layout" :class="editable ? 'editableRangeHover' : ''">
             <button
               v-for="(articleTag, tagIndex) in articleInfo.tags"
               v-bind:key="tagIndex"
               v-bind:value="articleTag"
-              @click="editable?_updateArticleInfo($event,'delTag'):null"
+              @click="editable ? _updateArticleInfo($event, 'delTag') : null"
             ># {{ articleTag }}</button>
 
             <p
@@ -155,7 +181,7 @@
               @click="_setFocus($event.target)"
               v-bind:contentEditable="editable"
               id="articleTagAppendText"
-              @blur="_updateArticleInfo($event,'appendTag')"
+              @blur="_updateArticleInfo($event, 'appendTag')"
             >+</p>
           </div>
         </div>
@@ -165,6 +191,7 @@
 </template>
 
 <script>
+import { searchContenteditableTag } from "../../../reference/tagFunctions";
 import { createNamespacedHelpers } from "vuex";
 const { mapMutations } = createNamespacedHelpers("articleStore");
 export default {
@@ -172,6 +199,9 @@ export default {
   props: ["articleInfo", "authorInfo", "readerInfo", "editable"],
   methods: {
     ...mapMutations(["updateArticleInfo"]),
+    authorSocialBtnClick(e, url) {
+      window.open(url, "_blank");
+    },
     _updateArticleInfo(e, dataType) {
       if (!this.editable) return;
 
@@ -188,41 +218,93 @@ export default {
 
         if (
           tagId !== "" &&
-          this.articleInfo.tags.findIndex(tag => tag == tagId) == -1
+          this.articleInfo.tags.findIndex((tag) => tag == tagId) == -1
         )
           this.articleInfo.tags.splice(this.articleInfo.tags.length, 0, tagId);
         e.target.innerText = "+";
       } else if ("delTag" == dataType) {
         let tagValue = e.target.value;
 
-        let tagIndex = this.articleInfo.tags.findIndex(tag => tag == tagValue);
+        let tagIndex = this.articleInfo.tags.findIndex(
+          (tag) => tag == tagValue
+        );
         if (tagIndex != -1) this.articleInfo.tags.splice(tagIndex, 1);
       }
+
       this.updateArticleInfo({ articleInfo: this.articleInfo });
     },
-    _setFocus(targetEle) {
+    _setFocus(targetEle, nodeIndex = 0) {
+      console.log(targetEle, nodeIndex);
       if (!this.editable) return;
-      if (targetEle == undefined) return;
+
+      let el = searchContenteditableTag(targetEle);
+      if (el == undefined) return;
+
+      if (nodeIndex != undefined) el = el.childNodes[nodeIndex];
       let range = document.createRange();
       let sel = window.getSelection();
-
-      if (sel.type == "Caret" && sel.focusNode.id == "articleTagAppendTaext") {
+      if (sel.type == "Caret" && sel.focusNode.id == "articleTagAppendText") {
         return;
       }
-
-      range.setStart(targetEle.childNodes[0], 0);
+      range.setStart(el, 0);
       range.collapse();
-
       sel.removeAllRanges();
       sel.addRange(range);
-
       targetEle.innerText = "";
-    }
-  }
+    },
+    async showImageSelDialog() {
+      if (!this.editable) return;
+      let el = document.getElementById("imgFileDialog_input");
+      let readImgPromise = new Promise((resolve, reject) => {
+        el.addEventListener("change", (e) => {
+          if (e.target.files != undefined) {
+            let _reader = new FileReader();
+            _reader.onload = (e) => {
+              resolve(e.target.result);
+            };
+            _reader.readAsDataURL(e.target.files[0]);
+          } else {
+            reject();
+          }
+        });
+      });
+
+      //show file select dialog
+      el.click();
+
+      this.articleInfo.headerImage = await readImgPromise;
+      this._updateArticleInfo();
+    },
+  },
 };
 </script>
 
 <style scoped>
+/* header image */
+.selHeaderImage {
+  border-radius: 2rem;
+  border-style: dashed;
+  width: 90%;
+
+  padding: 1rem 0;
+  margin: 0 5%;
+  cursor: pointer;
+  background-color: transparent;
+  color: #aaa;
+  font-size: 1.5rem;
+  transition: all 500ms;
+
+  outline: none;
+}
+.selHeaderImage:hover {
+  color: #aef;
+  border-color: rgb(105, 184, 204);
+}
+.headerImageFig > img {
+  object-fit: fill;
+  width: 100%;
+  max-height: 400px;
+}
 /*font color */
 .surColor {
   color: #b1a899;
@@ -330,6 +412,7 @@ p:hover {
   display: flex;
   align-items: center;
   margin-bottom: 0.2rem;
+  outline: none;
 }
 .followBtn {
   margin-left: 1rem;
@@ -339,6 +422,7 @@ p:hover {
   border-color: orange;
   color: orange;
   border-radius: 0.2rem;
+  outline: none;
 }
 .readerFollowing {
   background-color: orange;
@@ -352,6 +436,7 @@ p:hover {
 .authorLink_btn button {
   padding: 0;
   width: 30px;
+  height: 30px;
   margin: 0.5rem 0;
   display: block;
   background-color: black;
@@ -379,5 +464,12 @@ button {
 [contentEditable="true"]:empty:not(:focus):before {
   content: "type somthing...";
   color: #bba;
+}
+
+@media screen and (max-width: 767px) {
+  .articleInfo_layout {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

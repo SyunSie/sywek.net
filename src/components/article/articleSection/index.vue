@@ -25,9 +25,9 @@ export default {
   methods: {
     cloneDeep(item) {
       return _.cloneDeep(item);
-    }
+    },
   },
-  components: { contentElement }
+  components: { contentElement },
 };
 </script>
 

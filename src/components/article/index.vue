@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="articleContentH">
     <articleNav />
     <main>
       <article>
@@ -18,7 +18,7 @@
           v-for="(section, sectionIndex) in getArticle.sections"
         />
         <hr id="articleFooter_hr" />
-        <articleFooter />
+        <articleFooter v-bind:editable="editable" :editArticleId="editArticleId" />
       </article>
     </main>
   </div>
@@ -36,25 +36,24 @@ export default {
   name: "sywekArticle",
   components: { articleSection, articleHeader, articleFooter, articleNav },
   data: () => {
-    return {
-      editable: false
-    };
+    return {};
   },
+  props: ["editable", "editArticleId"],
   computed: {
     ...mapGetters(["getArticle"]),
-    console: () => console
+    console: () => console,
   },
   methods: {
     cloneDeep(item) {
       return _.cloneDeep(item);
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style scoped>
-main {
-  min-height: 100vh;
+.articleContentH {
+  height: 100%;
 }
 article {
   color: rgb(206, 202, 195);

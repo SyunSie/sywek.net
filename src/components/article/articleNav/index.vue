@@ -18,10 +18,10 @@ export default {
   name: "articleNav",
 
   methods: {
-    ...mapMutations(["updateNav"])
+    ...mapMutations(["updateNav"]),
   },
   computed: {
-    ...mapGetters(["getArticleNavInfo"])
+    ...mapGetters(["getArticleNavInfo"]),
   },
   mounted() {
     this.updateNav();
@@ -39,6 +39,7 @@ export default {
     //register window scroll event , the event will detect scroll bar position , and show articleNav when scroll under articleHeader_hr.
 
     let articleH_hr = document.getElementById("articleHeader_hr");
+
     let thisNav = this.$refs.nav;
 
     if (articleH_hr != undefined) {
@@ -56,7 +57,7 @@ export default {
     } else {
       thisNav.classList.add("articleH_hr");
     }
-  }
+  },
 };
 </script>
 
