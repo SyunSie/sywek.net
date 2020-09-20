@@ -1,5 +1,6 @@
 import Vue from "vue";
-import axios from "axios";
+import sywekAxios from "../../../reference/axiosMsgReaction";
+// import axios from "axios";
 // const API_URL = 'http://127.0.0.1:5000/article/api'
 const state = {
   article: {
@@ -52,7 +53,7 @@ const getters = {
     return state.article;
   },
   getArticleNavInfo() {
-    console.log("getArticleNavInfo");
+    // console.log("getArticleNavInfo");
     let articleNavInfo = [];
 
     //let findPreverse
@@ -84,29 +85,25 @@ const getters = {
 
 const actions = {
   async fetchArticle({ commit }, { articleId, isEdit = false }) {
-    // axios.defaults.withCredentials = true;
     let _article = {};
-    let _ret;
 
-    console.log("FetchArticle : ", articleId, isEdit);
+    // console.log("FetchArticle : ", articleId, isEdit);
     let _url = process.env.VUE_APP_API_URL + "/article" + (isEdit ? "/edit/" : "/") + articleId;
-    _ret = await axios.get(_url, { withCredentials: true });
-    _article = _ret.data.article;
-    if (_ret.data.msg == "Successed") {
+    let _data = await sywekAxios.get(_url, {}, true);
+    _article = _data.article;
+    if (_data.msg == "Successed") {
       commit("setArticle", _article);
     }
-    console.log(_ret.data);
+
     return {
-      msg: _ret.data.msg,
-      articleHeader: _ret.data.article ? (_ret.data.article.articleInfo ? _ret.data.article.articleInfo.header : undefined) : undefined,
-      articleId: _ret.data.articleId ? _ret.data.articleId : articleId,
+      msg: _data.msg,
+      articleHeader: _data.article ? (_data.article.articleInfo ? _data.article.articleInfo.header : undefined) : undefined,
+      articleId: _data.articleId ? _data.articleId : articleId,
     };
   },
 
   async postArticle({ commit, state }, articleInfo) {
-    // axios.defaults.withCredentials = true;
-
-    console.log("postArticle", state.article, articleInfo);
+    // console.log("postArticle", state.article, articleInfo);
     let _postData = {
       article: {
         articleFormatVersion: state.article.articleFormatVersion,
@@ -115,31 +112,44 @@ const actions = {
       },
       articleStatus: articleInfo.articleStatus,
     };
-    console.log(_postData);
-    let ret =
+    // console.log(_postData);
+    let _data =
       articleInfo.articleId == -999
-        ? await axios.post(process.env.VUE_APP_API_URL + "/article/edit", _postData, { withCredentials: true })
-        : await axios.put(process.env.VUE_APP_API_URL + `/article/edit/${articleInfo.articleId}`, _postData, { withCredentials: true });
+        ? await sywekAxios.post(process.env.VUE_APP_API_URL + "/article/edit", _postData, {}, true)
+        : await sywekAxios.put(process.env.VUE_APP_API_URL + `/article/edit/${articleInfo.articleId}`, _postData, {}, true);
 
-    if (ret.data.msg == undefined || ret.data.msg != "Successed") {
-      console.log("store temp article in sessionStorage.");
+    if (_data.msg == undefined || _data.msg != "Successed") {
+      // console.log("store temp article in sessionStorage.");
       sessionStorage.tempArticle = JSON.stringify(state.article);
     } else {
-      console.log("post article successed.");
+      // console.log("post article successed.");
       commit("setArticle", state.article); // need remove this line
     }
     return {
-      msg: ret.data.msg,
-      articleStatus: ret.data.articleStatus ? ret.data.articleStatus : undefined,
-      articleId: ret.data.articleId ? ret.data.articleId : undefined,
+      msg: _data.msg,
+      articleStatus: _data.articleStatus ? _data.articleStatus : undefined,
+      articleId: _data.articleId ? _data.articleId : undefined,
     };
+  },
+  async setFollowing({ commit }, { targetUserId, followStatus }) {
+    let _apiPath = process.env.VUE_APP_API_URL + `/user/follow/${targetUserId}`;
+
+    let _data = followStatus ? await sywekAxios.post(_apiPath, {}, {}, true) : await sywekAxios.delete(_apiPath, {}, true);
+
+    if (_data.msg == "Successed") {
+      commit("setFollowerStatus", _data.currentStatus);
+    }
   },
 };
 
 const mutations = {
   //set article
+  setFollowerStatus(state, followStatus) {
+    // console.log("set follower status", followStatus);
+    state.article.readerInfo.isFollowing = followStatus;
+  },
   setArticle(state, article) {
-    console.log("set article value.", article);
+    // console.log("set article value.", article);
 
     Vue.set(state, "article", article);
 
@@ -147,7 +157,7 @@ const mutations = {
   },
   ///articleNav
   updateNav(state) {
-    console.log("updateNav");
+    // console.log("updateNav");
     let st = 0;
     let h = 0;
     let findSTinCurrentSection = true;
@@ -177,7 +187,7 @@ const mutations = {
   /////article header
 
   updateArticleInfo(state, { articleInfo }) {
-    console.log("updateArticleInfo", articleInfo);
+    // console.log("updateArticleInfo", articleInfo);
     articleInfo.postDateTime = { ...state.article.articleInfo.postDateTime };
 
     Vue.set(state.article, "articleInfo", articleInfo);
@@ -187,7 +197,7 @@ const mutations = {
   },
   /////article content
   updateContentEle(state, { contentEle, sectionIndex, contentEleIndex }) {
-    console.log("UpdateContentEle", contentEle, sectionIndex, contentEleIndex);
+    // console.log("UpdateContentEle", contentEle, sectionIndex, contentEleIndex);
     //if (state.article.sections.length <= sectionIndex || state.article.sections[sectionIndex].contentElements.length <= contentEleIndex)
     //  return console.log("not found contentElement error.");
 
@@ -195,7 +205,7 @@ const mutations = {
     //state.article.sections[sectionIndex].contentElements[contentEleIndex] = contentEle;
   },
   createContentEle(state, { sectionIndex, contentEleIndex }) {
-    console.log("CreateContentEle", sectionIndex, contentEleIndex);
+    // console.log("CreateContentEle", sectionIndex, contentEleIndex);
 
     state.article.sections[sectionIndex].contentElements.splice(contentEleIndex + 1, 0, {
       contentType: undefined,
@@ -210,12 +220,12 @@ const mutations = {
     });*/
   },
   deleteContentEle(state, { sectionIndex, contentEleIndex }) {
-    console.log("DeleteContentEle", sectionIndex, contentEleIndex);
+    // console.log("DeleteContentEle", sectionIndex, contentEleIndex);
     state.article.sections[sectionIndex].contentElements.splice(contentEleIndex, 1);
 
     //Remove section when it's contentElements is empty.
     if (state.article.sections[sectionIndex].contentElements.length <= 0) {
-      console.log("DeleteSectionIndex:when contentEles is empty.", sectionIndex);
+      // console.log("DeleteSectionIndex:when contentEles is empty.", sectionIndex);
       state.article.sections.splice(sectionIndex, 1);
 
       if (state.article.sections.length == 0) {
@@ -233,13 +243,13 @@ const mutations = {
   },
 
   createSection(state, { baseSectionIndex, baseContentEleIndex }) {
-    console.log("CreateSection", baseSectionIndex, baseContentEleIndex);
+    // console.log("CreateSection", baseSectionIndex, baseContentEleIndex);
     let baseSCEleLength = state.article.sections[baseSectionIndex].contentElements.length;
 
     //true :is last contentEle
     //false : need migration contentEles which index greater than baseContentEleIndex
     if (baseSCEleLength == baseContentEleIndex + 1) {
-      console.log("CreateSection", "-create new section and contentEle.");
+      // console.log("CreateSection", "-create new section and contentEle.");
       state.article.sections.splice(baseSectionIndex + 1, 0, {
         contentElements: [
           {
@@ -250,7 +260,7 @@ const mutations = {
         ],
       });
     } else {
-      console.log("CreateSection", "-migrate contentEles.");
+      // console.log("CreateSection", "-migrate contentEles.");
       let migrateStartEleIndex = baseContentEleIndex + 1;
       let migrateContentEles = state.article.sections[baseSectionIndex].contentElements.splice(migrateStartEleIndex, baseSCEleLength - migrateStartEleIndex);
 

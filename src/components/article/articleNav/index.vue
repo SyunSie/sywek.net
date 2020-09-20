@@ -43,7 +43,7 @@ export default {
     let thisNav = this.$refs.nav;
 
     if (articleH_hr != undefined) {
-      console.log("register events");
+      // console.log("register events");
 
       window.addEventListener("scroll", function navScrollEFunction() {
         if (window.pageYOffset >= articleH_hr.offsetTop - navSpace * 2) {

@@ -30,14 +30,12 @@ export default {
         articleId: this.editArticleId,
       });
 
-      console.log("post article footer-> _postRet", _postRet);
+      // console.log("post article footer-> _postRet", _postRet);
 
       if (_postRet.msg == "Successed") {
         _postRet.articleStatus
           ? this.$router.push(`/article/@${_postRet.articleId}`)
           : this.$router.push("/myArticles");
-      } else {
-        console.log("Article post error : ", _postRet.msg);
       }
     },
   },

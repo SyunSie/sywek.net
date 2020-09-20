@@ -75,7 +75,8 @@
 // import isElementInViewport from "../../reference/elementInViewport";
 import inViewportItem from "../../components/itemInViewportList/inViewportItem";
 import itemInViewportList from "../../components/itemInViewportList";
-import axios from "axios";
+// import axios from "axios";
+import sywekAxios from "../../reference/axiosMsgReaction";
 import Vue from "vue";
 export default {
   name: "myArticles",
@@ -97,17 +98,18 @@ export default {
         : this.$router.push(`/editArticle/${articleId}`);
     },
     async setArticleStatus(_articleId, articleStatus) {
-      let _ret = await axios.patch(
+      let _data = await sywekAxios.patch(
         process.env.VUE_APP_API_URL + `/article/edit/${_articleId}`,
         { articleStatus: articleStatus },
-        { withCredentials: true }
+        {},
+        true
       );
 
-      console.log("test", _ret.data);
-      if (_ret.data.msg == "Successed") {
+      // console.log("test", _data);
+      if (_data.msg == "Successed") {
         for (let index in this.articlesInfo) {
-          if (this.articlesInfo[index].id == _ret.data.articleId) {
-            this.articlesInfo[index].isOpened = _ret.data.articleStatus;
+          if (this.articlesInfo[index].id == _data.articleId) {
+            this.articlesInfo[index].isOpened = _data.articleStatus;
 
             break;
           }
@@ -115,15 +117,15 @@ export default {
       }
     },
     async deleteArticle(_articleId) {
-      let _ret = await axios.delete(
+      let _data = await sywekAxios.delete(
         process.env.VUE_APP_API_URL + `/article/edit/${_articleId}`,
-        {
-          withCredentials: true,
-        }
+        {},
+        true
       );
 
+      if (_data.msg != "Successed") return;
       for (let index in this.articlesInfo) {
-        if (this.articlesInfo[index].id == _ret.data.articleId) {
+        if (this.articlesInfo[index].id == _data.articleId) {
           Vue.delete(this.articlesInfo, index);
           break;
         }
@@ -164,6 +166,7 @@ export default {
         this.fetchCount,
         this.fetchOffset
       );
+      if (_articleInfo == undefined) return;
 
       if (_articleInfo.length != this.fetchCount) {
         this.isFetchTheEndArticlesInfo = true;
@@ -191,20 +194,20 @@ export default {
     async fetchMyArticlesInfo(_count, _offset) {
       if (_count <= 0 || _offset < 0) return undefined;
 
-      let _ret = await axios.get(
+      let _data = await sywekAxios.get(
         process.env.VUE_APP_API_URL + "/article/articlesInfo",
         {
           params: { count: _count, offset: _offset },
-          withCredentials: true,
-        }
+        },
+        true
       );
 
-      if (_ret.data.msg == "Successed") {
-        console.log("fetchMyArticlesInfo", _ret.data.msg);
+      if (_data.msg == "Successed") {
+        // console.log("fetchMyArticlesInfo", _data.msg);
 
-        return _ret.data.articlesInfo;
+        return _data.articlesInfo;
       }
-      console.log("fetchMyArticlesInfo", _ret.data.msg);
+      // console.log("fetchMyArticlesInfo", _data.msg);
       return undefined;
     },
   },

@@ -1,5 +1,6 @@
 <template>
   <div class="contentEle_layout" ref="baseContent">
+    <imageBase64Reader v-if='editable' ref="imageReader" />
     <div
       class="content_layout"
       :class="editable?'editableRangeHover':''"
@@ -7,12 +8,6 @@
         contentEle.contentType == undefined || contentEle.content == undefined || contentTypeSelTools_display == true
       "
     >
-      <!-- <input
-        id="imgFileDialog_input"
-        ref="imgFileDialog_input"
-        type="file"
-        accept=".jpg, .jpeg, .bmp"
-      />-->
       <button
         class="btn_contentTypeToolManager"
         v-if="
@@ -278,12 +273,14 @@
 </template>
 
 <script>
+import imageBase64Reader from "../../../imageBase64Reader";
 import { createNamespacedHelpers } from "vuex";
 import { elementTypes } from "./elementParam";
 import { searchContenteditableTag } from "../../../../reference/tagFunctions";
 const { mapMutations } = createNamespacedHelpers("articleStore");
 export default {
   name: "contentElement",
+  components: { imageBase64Reader },
   data: () => {
     return {
       contentTypeSelTools_display: false,
@@ -319,7 +316,6 @@ export default {
       if (e.key == "Backspace" && _index != 0) {
         let _sel = window.getSelection();
         if (_sel.anchorOffset == 0 && _sel.focusOffset == 0) {
-          console.log("asd");
           let _nextEl =
             e.target.parentElement.parentElement.childNodes[_index - 1]
               .childNodes[1];
@@ -434,7 +430,7 @@ export default {
         this.contentEle.content.title = e.target.innerText
           .replace(/<[^>]*>/, "")
           .replace(/(?:\r\n|\r|\n)/g, " ");
-        console.log(this.contentEle.content.title);
+        // console.log(this.contentEle.content.title);
       }
       this._updateContentEle();
     },
@@ -445,27 +441,10 @@ export default {
 
       //contentType step
       if (contentType == "image") {
-        // let el = this.$refs.imgFileDialog_input;
-        let el = document.getElementById("imgFileDialog_input");
-        //using promise ,waitting img->base64 process done.
-        let readImgPromise = new Promise((resolve, reject) => {
-          el.addEventListener("change", (e) => {
-            if (e.target.files != undefined) {
-              let _reader = new FileReader();
-              _reader.onload = (e) => {
-                resolve(e.target.result);
-              };
-              _reader.readAsDataURL(e.target.files[0]);
-            } else {
-              reject();
-            }
-          });
-        });
+        let _imageSize = Number(process.env.VUE_APP_ARTICLE_IMG_SIZE_MB);
+        let _ret = this.$refs.imageReader.imageReaderFunc(_imageSize);
 
-        //show file select dialog
-        el.click();
-
-        this.contentEle.content.imageUrl = await readImgPromise;
+        this.contentEle.content.imageUrl = await _ret;
       }
 
       this.contentEle.contentType = contentType;
@@ -682,11 +661,7 @@ h3 {
 .imageFitWidth img {
   width: 100%;
 }
-/* #imgFileDialog_input {
-  display: none;
-  width: 0;
-  height: 0;
-} */
+
 .imageContet_imageAndCpation_layout img {
   /* min-width: 400px; */
   max-height: 500px;

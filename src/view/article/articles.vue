@@ -1,9 +1,11 @@
 <template>
   <div class="marginContent">
     <div class="contentWidth">
+      <authorCard v-if="isAuthorInfoMode" :authorInfo="authorInfo" :readerInfo="readerInfo" />
+      <hr style="margin:2rem auto;" v-if="isAuthorInfoMode" />
       <div class="articleList">
         <div class="articleListHeader">
-          <h1>Search Articles</h1>
+          <h1>{{!isAuthorInfoMode?'Search Articles':`${authorInfo.authorName} \'s Articles`}}</h1>
 
           <button class="listRefreshBtn" @click="refreshList">
             <svg viewBox="0 0 24 24">
@@ -41,14 +43,15 @@
                     <div class="itemDatetime">
                       <!-- <p>{{'Last Edit : '+info.lastEditDT}}</p> -->
 
-                      <p>
+                      <p v-if="!that.isAuthorInfoMode">
                         post by :
                         <span
                           class="author"
-                          @click="$router.push('/author/'+info.authorInfo.authorId)"
+                          @click="$router.push('/user/@'+info.authorInfo.authorId)"
                         >{{info.authorInfo.authorName}}</span>
                         at {{info.postDT}}
                       </p>
+                      <p v-if="that.isAuthorInfoMode">Post at : {{info.postDT}}</p>
                     </div>
                   </div>
                 </div>
@@ -67,11 +70,14 @@
 // import isElementInViewport from "../../reference/elementInViewport";
 import inViewportItem from "../../components/itemInViewportList/inViewportItem";
 import itemInViewportList from "../../components/itemInViewportList";
-import axios from "axios";
+import authorCard from "../../components/authorCard";
+
+// import axios from "axios";
+import sywekAxios from "../../reference/axiosMsgReaction";
 import Vue from "vue";
 export default {
   name: "articles",
-  components: { itemInViewportList, inViewportItem },
+  components: { itemInViewportList, inViewportItem, authorCard },
   data() {
     return {
       articlesInfo: [],
@@ -82,6 +88,11 @@ export default {
       rules: [],
       searchStr: "",
       searchTag: "",
+
+      targetAuthorId: 0,
+      isAuthorInfoMode: false,
+      authorInfo: {},
+      readerInfo: {},
     };
   },
   methods: {
@@ -117,6 +128,7 @@ export default {
     },
     async searchArticlesAndSetRules() {
       if (this.isFetching || this.fetchCount <= 0) return;
+
       this.isFetching = true;
       let _searchStr = this.$route.query.searchStr
           ? this.$route.query.searchStr.replace("_", " ")
@@ -126,12 +138,19 @@ export default {
           : "";
       this.searchStr = _searchStr;
       this.searchTag = _searchTag;
-      let _articleInfo = await this.searchArticles(
-        _searchStr,
-        _searchTag,
-        this.fetchCount,
-        this.fetchOffset
-      );
+
+      let _articleInfo = !this.isAuthorInfoMode
+        ? await this.searchArticlesByStringAndTag(
+            _searchStr,
+            _searchTag,
+            this.fetchCount,
+            this.fetchOffset
+          )
+        : await this.getArticlesInfoByAuthorId(
+            this.targetAuthorId,
+            this.fetchCount,
+            this.fetchOffset
+          );
 
       if (_articleInfo.length != this.fetchCount) {
         this.isFetchTheEndArticlesInfo = true;
@@ -156,30 +175,94 @@ export default {
       this.autoSetRules();
       this.isFetching = false;
     },
-    async searchArticles(_searchStr, _searchTag, _count, _offset) {
+    async getArticlesInfoByAuthorId(_authorId, _count, _offset) {
       if (_count <= 0 || _offset < 0) return undefined;
 
-      let _ret = await axios.get(process.env.VUE_APP_API_URL + "/articles", {
-        params: {
-          searchStr: _searchStr,
-          searchTag: _searchTag,
-          searchCount: _count,
-          searchOffset: _offset,
-        },
-      });
+      let _data = await sywekAxios.get(
+        process.env.VUE_APP_API_URL +
+          `/article/articlesInfo/author/${_authorId}`,
+        {
+          params: {
+            count: _count,
+            offset: _offset,
+          },
+        }
+      );
 
-      if (_ret.data.msg == "Successed") {
-        console.log("searchArticles", _ret.data);
+      if (_data.msg == "Successed") {
+        // console.log("getArticlesInfoByAuthorId", _data);
 
-        return _ret.data.articlesInfo;
+        return _data.articlesInfo;
       }
-      console.log("searchArticles failed", _ret.data.msg);
+      // console.log("getArticlesInfoByAuthorId failed", _data.msg);
+      return undefined;
+    },
+    async searchArticlesByStringAndTag(
+      _searchStr,
+      _searchTag,
+      _count,
+      _offset
+    ) {
+      if (_count <= 0 || _offset < 0) return undefined;
+
+      let _data = await sywekAxios.get(
+        process.env.VUE_APP_API_URL + "/articles",
+        {
+          params: {
+            searchStr: _searchStr,
+            searchTag: _searchTag,
+            searchCount: _count,
+            searchOffset: _offset,
+          },
+        }
+      );
+
+      if (_data.msg == "Successed") {
+        // console.log("searchArticlesByStringAndTag", _data);
+
+        return _data.articlesInfo;
+      }
+      // console.log("searchArticlesByStringAndTag failed", _data.msg);
       return undefined;
     },
   },
+  async beforeMount() {
+    const _routeName = this.$route.name;
+    if (_routeName == "authorInfo") {
+      this.isAuthorInfoMode = true;
+      this.targetAuthorId = this.$route.params.authorId.split("@")[1];
+
+      // verify targetAuthorId
+      if (!this.targetAuthorId) {
+        this.$router.push("/404");
+        return;
+      }
+
+      let _data = await sywekAxios.get(
+        process.env.VUE_APP_API_URL + `/user/info/${this.targetAuthorId}`,
+        {},
+        true
+      );
+
+      if (_data.msg == "Successed") {
+        this.authorInfo = _data.userInfo.authorInfo;
+        this.readerInfo = _data.userInfo.readerInfo;
+        // console.log(_data);
+        // replace url using repalcestate
+        window.history.replaceState(
+          "",
+          "",
+          "/#/user/" +
+            _data.userInfo.authorInfo.authorName.replace(" ", "_") +
+            "@" +
+            this.targetAuthorId
+        );
+      }
+    }
+  },
   async mounted() {
     await this.searchArticlesAndSetRules();
-    console.log(this.$route);
+
     if (!this.isFetchTheEndArticlesInfo) {
       // cacualate client height of listItem's count,and fetch data to fill it.
       let _child = undefined;

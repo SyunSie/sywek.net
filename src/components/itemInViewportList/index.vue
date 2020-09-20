@@ -139,11 +139,11 @@ export default {
     let _body = document.querySelector("body");
     this.triggerFunction = this._registerScrollEvents();
     _body.addEventListener("scroll", this.triggerFunction);
-    console.log("mounted list", this.$children);
+    // console.log("mounted list", this.$children);
   },
   destroyed() {
     let _body = document.querySelector("body");
-    console.log("destory!!");
+    // console.log("destory!!");
     _body.removeEventListener("scroll", this.triggerFunction);
   },
 };

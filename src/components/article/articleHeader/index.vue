@@ -1,5 +1,6 @@
 <template>
   <header class="article_header">
+    <imageBase64Reader v-if="editable" ref="imageReader" />
     <div class="article_header_layout">
       <input
         v-if="editable && !articleInfo.headerImage "
@@ -37,6 +38,7 @@
             <img class="authorInfo_pic" v-bind:src="authorInfo.authorPicture" />
             <div class="authorLink_btn">
               <button
+                v-if="authorInfo.links.facebook !=''"
                 value="facebook"
                 @click="authorSocialBtnClick($event,authorInfo.links.facebook)"
               >
@@ -48,6 +50,7 @@
                 </svg>
               </button>
               <button
+                v-if="authorInfo.links.twitter !=''"
                 value="twitter"
                 @click="authorSocialBtnClick($event,authorInfo.links.twitter)"
               >
@@ -73,6 +76,7 @@
                 </svg>
               </button>
               <button
+                v-if="authorInfo.links.instagram !=''"
                 value="instagram"
                 @click="authorSocialBtnClick($event,authorInfo.links.instagram)"
               >
@@ -131,7 +135,11 @@
                   </metadata>
                 </svg>
               </button>
-              <button value="github" @click="authorSocialBtnClick($event,authorInfo.links.github)">
+              <button
+                v-if="authorInfo.links.github !=''"
+                value="github"
+                @click="authorSocialBtnClick($event,authorInfo.links.github)"
+              >
                 <svg
                   class="svg-itemColor"
                   xmlns="http://www.w3.org/2000/svg"
@@ -155,6 +163,7 @@
             <div class="authornameAndFollowBtn">
               <span class="authorInfo_name">{{ authorInfo.authorName }}</span>
               <button
+                @click="setUserFollower(authorInfo.authorId ,!readerInfo.isFollowing )"
                 class="followBtn"
                 v-bind:class="readerInfo.isFollowing ? 'readerFollowing' : 'readerUnfollow'"
               >{{ readerInfo.isFollowing ? "Follwing" : "Follow" }}</button>
@@ -173,7 +182,7 @@
               v-for="(articleTag, tagIndex) in articleInfo.tags"
               v-bind:key="tagIndex"
               v-bind:value="articleTag"
-              @click="editable ? _updateArticleInfo($event, 'delTag') : null"
+              @click="editable ? _updateArticleInfo($event, 'delTag') : $router.push({path:'/articles',query:{searchStr:'',searchTag:articleTag}})"
             ># {{ articleTag }}</button>
 
             <p
@@ -191,14 +200,23 @@
 </template>
 
 <script>
+import imageBase64Reader from "../../imageBase64Reader";
 import { searchContenteditableTag } from "../../../reference/tagFunctions";
 import { createNamespacedHelpers } from "vuex";
-const { mapMutations } = createNamespacedHelpers("articleStore");
+const { mapMutations, mapActions } = createNamespacedHelpers("articleStore");
 export default {
   name: "articleHeader",
+  components: { imageBase64Reader },
   props: ["articleInfo", "authorInfo", "readerInfo", "editable"],
   methods: {
     ...mapMutations(["updateArticleInfo"]),
+    ...mapActions(["setFollowing"]),
+    setUserFollower(targetUserId, followStatus) {
+      this.setFollowing({
+        targetUserId: targetUserId,
+        followStatus: followStatus,
+      });
+    },
     authorSocialBtnClick(e, url) {
       window.open(url, "_blank");
     },
@@ -234,7 +252,7 @@ export default {
       this.updateArticleInfo({ articleInfo: this.articleInfo });
     },
     _setFocus(targetEle, nodeIndex = 0) {
-      console.log(targetEle, nodeIndex);
+      if (targetEle.innerText != "") return;
       if (!this.editable) return;
 
       let el = searchContenteditableTag(targetEle);
@@ -250,29 +268,15 @@ export default {
       range.collapse();
       sel.removeAllRanges();
       sel.addRange(range);
-      targetEle.innerText = "";
+      // targetEle.innerText = "";
     },
     async showImageSelDialog() {
       if (!this.editable) return;
-      let el = document.getElementById("imgFileDialog_input");
-      let readImgPromise = new Promise((resolve, reject) => {
-        el.addEventListener("change", (e) => {
-          if (e.target.files != undefined) {
-            let _reader = new FileReader();
-            _reader.onload = (e) => {
-              resolve(e.target.result);
-            };
-            _reader.readAsDataURL(e.target.files[0]);
-          } else {
-            reject();
-          }
-        });
-      });
 
-      //show file select dialog
-      el.click();
+      let _imageSize = Number(process.env.VUE_APP_ARTICLE_IMG_SIZE_MB);
+      let _ret = this.$refs.imageReader.imageReaderFunc(_imageSize);
 
-      this.articleInfo.headerImage = await readImgPromise;
+      this.articleInfo.headerImage = await _ret;
       this._updateArticleInfo();
     },
   },

@@ -12,7 +12,7 @@ const actions = {};
 
 const mutations = {
   set_blurDisplay(state, setStatus) {
-    console.log("set_blurDisplay", setStatus);
+    // console.log("set_blurDisplay", setStatus);
     state.blurDisplay = setStatus;
   },
 };

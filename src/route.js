@@ -15,10 +15,12 @@ const routes = [
   },
   { path: "/newArticle", name: "newArticle", component: newArticle },
   { path: "/signup", name: "signUp", component: signUp },
+  { path: "/user/profile", name: "profile", component: signUp },
   { path: "/article/:articlePath", name: "article", component: newArticle },
   { path: "/editArticle/:articlePath", name: "editArticle", component: newArticle },
   { path: "/myArticles", name: "myArticles", component: myArticles },
   { path: "/articles", name: "articles", component: articles },
+  { path: "/user/:authorId", name: "authorInfo", component: articles },
 ];
 
 const router = new VueRouter({

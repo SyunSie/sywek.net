@@ -123,7 +123,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import sywekAxios from "../../reference/axiosMsgReaction";
 export default {
   name: "logIn",
   data() {
@@ -148,21 +148,21 @@ export default {
         password: this.password,
       };
 
-      let ret = await axios.post(
+      let _data = await sywekAxios.post(
         process.env.VUE_APP_API_URL + "/session",
         {
           userData: userdata,
         },
-        {
-          withCredentials: true,
-        }
+        {},
+        true
       );
+      3, _data;
       //successed => exit and set token
       //failed show error msg
 
-      if (ret.data.msg == "Successed") {
-        if (ret.data.token != null) {
-          localStorage.userInfo = JSON.stringify(ret.data.token);
+      if (_data.msg == "Successed") {
+        if (_data.token != null) {
+          localStorage.userInfo = JSON.stringify(_data.token);
           this.$router.push("/").catch(() => {});
         }
         //emit userInfo update.
@@ -170,9 +170,8 @@ export default {
         //send update to vuejs.app
         this.$emit("login-exit");
       } else {
-        this.$refs.msg.innerText = ret.data.msg;
+        this.$refs.msg.innerText = _data.msg;
       }
-      // let ret = await axios.get('',{ params: { userData: userdata },withCredentials:true })
     },
   },
   mounted() {

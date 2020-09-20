@@ -20,7 +20,8 @@
 <script>
 import webHeader from "./components/header/header";
 import logIn from "./components/login";
-import axios from "axios";
+
+import sywekAxios from "./reference/axiosMsgReaction";
 import Vue from "vue";
 import { createNamespacedHelpers } from "vuex";
 const { mapGetters, mapMutations } = createNamespacedHelpers("appStore");
@@ -32,26 +33,22 @@ export default {
       loginDisplay: false,
       isLogin: false,
 
-      userInfo: { name: "", pic: "" },
+      userInfo: { name: "", userImage: "" },
     };
   },
   async mounted() {
-    console.log("VueApp Mounted!!!");
+    // console.log("VueApp Mounted!!!");
 
-    let ret = await axios.get(process.env.VUE_APP_API_URL + "/session", {
-      withCredentials: true,
-    });
+    let _data = await sywekAxios.get(
+      process.env.VUE_APP_API_URL + "/session",
+      {},
+      true
+    );
 
-    if (ret.data.msg == "Successed") {
-      localStorage.userInfo = JSON.stringify(ret.data.token);
-      // console.log("json string", JSON.stringify(ret.data.token));
-      // this.isLogin = true;
-      // console.log("Login Successed");
+    if (_data.msg == "Successed") {
+      localStorage.userInfo = JSON.stringify(_data.token);
     } else {
       localStorage.removeItem("userInfo");
-
-      // this.isLogin = false;
-      // console.log("Login Failed");
     }
     this.updateUserInfo();
 
@@ -64,14 +61,15 @@ export default {
     ...mapMutations(["set_blurDisplay"]),
     async logout() {
       // console.log("logout");
-      let ret = await axios.delete(process.env.VUE_APP_API_URL + "/session", {
-        withCredentials: true,
-      });
+      await sywekAxios.delete(
+        process.env.VUE_APP_API_URL + "/session",
+        {},
+        true
+      );
+
       localStorage.removeItem("userInfo");
-
+      this.isLogin = false;
       this.updateUserInfo();
-
-      console.log(ret.data);
     },
     updateUserInfo() {
       if (localStorage.userInfo) {
@@ -79,6 +77,7 @@ export default {
         // console.log("localStorage", localStorage.userInfo);
         // this.userInfo = localStorage.userInfo;
         Vue.set(this.$data, "userInfo", JSON.parse(localStorage.userInfo));
+
         this.isLogin = true;
       } else {
         this.isLogin = false;
@@ -113,6 +112,9 @@ export default {
 }
 .showEle {
   display: block;
+}
+button {
+  outline: none;
 }
 html,
 body {

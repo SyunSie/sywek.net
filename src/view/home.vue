@@ -24,7 +24,7 @@ export default {
   },
   methods: {
     async fetchRecommandArticlesInfo() {
-      console.log("fetchRecommandArticlesInfo !");
+      // console.log("fetchRecommandArticlesInfo !");
       let _ret = await axois.get(
         process.env.VUE_APP_API_URL + "/article/recommandArticlesInfo",
         { withCredentials: true }
@@ -54,12 +54,12 @@ export default {
           })
         );
       } else {
-        console.log("fetchRecommandArticlesInfo error: ", _ret.data.msg);
+        // console.log("fetchRecommandArticlesInfo error: ", _ret.data.msg);
       }
     },
   },
   mounted() {
-    console.log("home mounted");
+    // console.log("home mounted");
     let _recommandInfosData = JSON.parse(
       sessionStorage.getItem("recommandSliderDatas")
     );
@@ -73,10 +73,10 @@ export default {
           _currentDateTime.getMinutes() - this.expireMinutes
         )
     ) {
-      console.log("carousel fetch new data");
+      // console.log("carousel fetch new data");
       this.fetchRecommandArticlesInfo();
     } else {
-      console.log("carousel slider data load from session-storage.");
+      // console.log("carousel slider data load from session-storage.");
       Vue.set(this, "recommandSliderDatas", _recommandInfosData.data);
     }
   },

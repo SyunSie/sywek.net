@@ -1,9 +1,15 @@
 <template>
   <div>
+    <imageBase64Reader ref="imageReader" />
+
     <div class="input_form">
       <div>
-        <h1>Sign Up</h1>
-        <div class="input-div">
+        <h1>{{!isReviseMode?"Sign Up":`${name} 's profile`}}</h1>
+        <div class="userImage">
+          <button v-if="!userImage" @click="appendUserImage">Append User Image</button>
+          <img v-if="userImage" @click="appendUserImage" :src="userImage" />
+        </div>
+        <div v-if="!isReviseMode" class="input-div">
           <input
             type="text"
             v-model="account"
@@ -14,7 +20,7 @@
           />
           <hr />
         </div>
-        <div class="input-div">
+        <div v-if="!isReviseMode" class="input-div">
           <input
             type="password"
             v-model="password"
@@ -25,7 +31,7 @@
           />
           <hr />
         </div>
-        <div class="input-div">
+        <div v-if="!isReviseMode" class="input-div">
           <input
             type="text"
             v-model="name"
@@ -79,16 +85,20 @@
         </div>
       </div>
       <p ref="msg" class="msg"></p>
-      <button @click="signUpCommit">Create Account</button>
+      <button @click="signUpCommit">{{!isReviseMode?"Create Account":"Update Profile"}}</button>
     </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
+// import axios from "axios";
+import sywekAxios from "../../reference/axiosMsgReaction";
 import asyncTimer from "../../reference/asyncTimer";
+import imageBase64Reader from "../imageBase64Reader";
 export default {
-  name: "signUpFrom",
+  name: "signUpForm",
+  components: { imageBase64Reader },
+  props: ["userProfile"],
   data() {
     return {
       account: "",
@@ -99,9 +109,18 @@ export default {
       twitter: "",
       github: "",
       instagram: "",
+
+      isReviseMode: false,
+      userId: 0,
     };
   },
   methods: {
+    async appendUserImage() {
+      let _imageSize = Number(process.env.VUE_APP_USER_IMG_SIZE_MB);
+      let _ret = await this.$refs.imageReader.imageReaderFunc(_imageSize);
+
+      this.userImage = await _ret;
+    },
     async signUpCommit() {
       this.$refs.msg.classList.remove("msg-successed");
       this.$refs.msg.classList.remove("msg-invalide");
@@ -110,6 +129,7 @@ export default {
       let _invalideEles = [];
 
       if (
+        !this.isReviseMode &&
         this.account.match(
           /^\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/g
         ) != this.account
@@ -118,11 +138,17 @@ export default {
         _invalideEles.splice(_invalideEles.length, 0, this.$refs.account);
       }
 
-      if (this.password.match(/[A-Za-z0-9@#$%^&+=]{8,32}/g) != this.password) {
+      if (
+        !this.isReviseMode &&
+        this.password.match(/[A-Za-z0-9@#$%^&+=]{8,32}/g) != this.password
+      ) {
         _invalideEles.splice(_invalideEles.length, 0, this.$refs.password);
       }
 
-      if (this.name.match(/[a-z0-9A-Z ]{3,64}/g) != this.name) {
+      if (
+        !this.isReviseMode &&
+        this.name.match(/[a-z0-9A-Z ]{3,64}/g) != this.name
+      ) {
         _invalideEles.splice(_invalideEles.length, 0, this.$refs.name);
       }
 
@@ -152,29 +178,54 @@ export default {
             ele.parentElement.classList.remove("invalide-div");
             ele.removeEventListener("focus", _innerFunc);
           };
+
           ele.addEventListener("focus", _innerFunc);
+
           ele.parentElement.classList.add("invalide-div");
         });
         return;
       }
-      let userdata = {
-        account: this.account,
-        password: this.password,
-        userImage: this.userImage,
-        name: this.name,
-        socialInfo: {
-          facebook: this.facebook,
-          instagram: this.instagram,
-          twitter: this.twitter,
-          github: this.github,
-        },
-      };
 
-      let ret = await axios.post(process.env.VUE_APP_API_URL + "/user", {
-        userData: userdata,
-      });
+      let _data = undefined;
+      if (this.isReviseMode) {
+        let userdata = {
+          userImage: this.userImage,
+          socialInfo: {
+            facebook: this.facebook,
+            instagram: this.instagram,
+            twitter: this.twitter,
+            github: this.github,
+          },
+        };
 
-      if (ret.data.msg == "Successed") {
+        _data = await sywekAxios.post(
+          process.env.VUE_APP_API_URL + "/user/profile",
+          {
+            userProfileData: userdata,
+          },
+          {},
+          true
+        );
+      } else {
+        let userdata = {
+          account: this.account,
+          password: this.password,
+          userImage: this.userImage,
+          name: this.name,
+          socialInfo: {
+            facebook: this.facebook,
+            instagram: this.instagram,
+            twitter: this.twitter,
+            github: this.github,
+          },
+        };
+
+        _data = await sywekAxios.post(process.env.VUE_APP_API_URL + "/user", {
+          userData: userdata,
+        });
+      }
+
+      if (_data.msg == "Successed") {
         // let _asyncTimer = (msec) => {
         //   return new Promise((resolve) => {
         //     setTimeout(() => {
@@ -182,15 +233,36 @@ export default {
         //     }, msec);
         //   });
         // };
-        this.$refs.msg.innerText =
-          "Sign Up successed , will redirect 2sec later.";
+        if (!this.isReviseMode)
+          this.$refs.msg.innerText =
+            "Sign Up successed , will redirect 2sec later.";
+        else
+          this.$refs.msg.innerText =
+            "Update profile successed , will redirect 2sec later.";
         this.$refs.msg.classList.add("msg-successed");
         await asyncTimer(2000); //async timer
 
         this.$router.push({ name: "home" }); //redirect to home.
       } else {
-        this.$refs.msg.innerText = ret.data.msg;
+        this.$refs.msg.innerText = _data.msg;
         this.$refs.msg.classList.add("msg-invalide");
+      }
+    },
+  },
+  watch: {
+    userProfile: function _(newValue) {
+      if (newValue != undefined) {
+        this.isReviseMode = true;
+        this.name = newValue.name;
+        this.userId = newValue.id;
+        // this.socialInfo = newValue.socialInfo;
+
+        this.userImage = newValue.userImage;
+
+        this.twitter = newValue.socialInfo.twitter;
+        this.facebook = newValue.socialInfo.facebook;
+        this.github = newValue.socialInfo.github;
+        this.instagram = newValue.socialInfo.instagram;
       }
     },
   },
@@ -198,6 +270,32 @@ export default {
 </script>
 
 <style scoped>
+.userImage > button {
+  background-color: #333;
+  color: #999;
+  border: #aaa dashed 2px;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  padding: 0.3rem;
+  shape-outside: circle();
+  cursor: pointer;
+  transition: all 0.6s;
+}
+.userImage > button:hover {
+  border-color: lightskyblue;
+  color: rgb(113, 164, 216);
+}
+.userImage > img {
+  border-radius: 50%;
+  width: 7rem;
+  height: 7rem;
+  /* float: left; */
+  shape-outside: circle();
+  margin: 2rem auto;
+  cursor: pointer;
+}
 .input_form {
   text-align: center;
 

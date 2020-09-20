@@ -3,12 +3,6 @@
     <div class="contentWidth">
       <sywekArticle :editable="editable" :editArticleId="editArticleId" />
     </div>
-    <input
-      id="imgFileDialog_input"
-      ref="imgFileDialog_input"
-      type="file"
-      accept=".jpg, .jpeg, .bmp"
-    />
   </div>
 </template>
 
@@ -32,7 +26,7 @@ export default {
   props: ["isLogin"],
 
   async mounted() {
-    console.log("article mounted!!!");
+    // console.log("article mounted!!!");
 
     const _routerName = this.$route.name;
     if (_routerName == "newArticle" || _routerName == "editArticle") {
@@ -63,7 +57,7 @@ export default {
       //set this.editable to true
       this.editable = true;
       this.editArticleId = _articleId;
-    } else if (this.$route.name == "article") {
+    } else if (_routerName == "article") {
       // get articl-id from this.$route.param.articlePath.filter('@');
       let _articleId = this.$route.params.articlePath.split("@");
       _articleId = Number(_articleId[_articleId.length - 1]);
@@ -90,7 +84,7 @@ export default {
 
       let _header =
         _ret.articleHeader.replace(/(?: )/g, "_") + "@" + _ret.articleId;
-      window.history.pushState("", "", `/#/article/${_header}`);
+      window.history.replaceState("", "", `/#/article/${_header}`);
       // set this.editAble to false
       this.editable = false;
     }
@@ -100,9 +94,4 @@ export default {
 </script>
 
 <style scoped>
-#imgFileDialog_input {
-  display: none;
-  width: 0;
-  height: 0;
-}
 </style>
