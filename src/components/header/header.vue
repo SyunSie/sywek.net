@@ -4,7 +4,7 @@
       :class="[hideNav? 'hideNav':'' ,!isScrollOnTop?'navBackColor':'']"
       class="webHeader text-border"
     >
-      <h1>
+      <h1 class="fontSize150">
         <router-link to="/">Sywek</router-link>
       </h1>
 
@@ -38,8 +38,8 @@
             />
           </div>
         </div>
-        <a v-if="!isLogin" href="#" @click="$emit('loginDisplay')">Log in</a>
-        <router-link v-if="!isLogin" to="/signup">Sign Up</router-link>
+        <a class="fontSize110" v-if="!isLogin" href="#" @click="$emit('loginDisplay')">Log in</a>
+        <router-link class="fontSize110" v-if="!isLogin" to="/signup">Sign Up</router-link>
         <div v-if="userInfo" class="userHeaderImg" @click="setUserNavDisp">
           <p>{{userInfo.name}}</p>
 
@@ -156,25 +156,35 @@ export default {
   },
   props: ["userInfo", "isLogin"],
   mounted() {
-    console.log(this.userInfo);
     // add scroll function
     let _body = document.querySelector("body");
 
     let _scrollFunc = scrollInfo_InnerFunc(_body);
-
+    let prevDirection = "";
+    let startPixel = 0;
+    const workPixel = 100;
     let _func = () => {
       // if (window.innerWidth > 767) return;
       let _scrollRet = _scrollFunc();
 
-      if (_scrollRet.axis == "y")
-        if (_scrollRet.direction == "forward") {
-          this.hideNav = true;
-          this.isScrollOnTop = false;
-        } else if (_scrollRet.direction == "reverse") {
+      if (_scrollRet.axis == "y") {
+        if (prevDirection != _scrollRet.direction) {
+          startPixel = _body.scrollTop;
+          prevDirection = _scrollRet.direction;
+        }
+        if (Math.abs(_body.scrollTop - startPixel) >= workPixel) {
+          if (_scrollRet.direction == "forward") {
+            this.hideNav = true;
+            this.isScrollOnTop = false;
+          } else if (_scrollRet.direction == "reverse") {
+            this.hideNav = false;
+          }
+        }
+
+        if (Math.round(_body.scrollTop) == 0) {
+          this.isScrollOnTop = true;
           this.hideNav = false;
         }
-      if (Math.round(_body.scrollTop) == 0) {
-        this.isScrollOnTop = true;
       }
     };
     _body.addEventListener("scroll", _func);
@@ -359,6 +369,12 @@ a:hover {
   }
 }
 @media screen and (max-width: 484px) {
+  .fontSize150 {
+    font-size: 1.5rem;
+  }
+  .fontSize110 {
+    font-size: 1.1rem;
+  }
   .userNav {
     top: 0;
     left: 0;
