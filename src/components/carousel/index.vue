@@ -218,7 +218,7 @@ export default {
     width: auto;
     top: 50%;
     left: 50%;
-
+    padding: 0;
     width: 60%;
     margin-left: -30%;
     /* height: 30vh; */

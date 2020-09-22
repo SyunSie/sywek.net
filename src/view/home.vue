@@ -2,9 +2,9 @@
   <div>
     <!-- <main>Lorem ipsum dolor sit amet consectetur adipisicing elit. Odio molestiae saepe doloremque eos, dignissimos magnam fuga deserunt nemo molestias ratione nostrum laborum, consequuntur tempore! Adipisci iste odio fugiat dolor esse?</main> -->
     <!-- <articlePreview /> -->
-    <keep-alive include="carousel">
-      <carousel :sliderData="recommandSliderDatas" />
-    </keep-alive>
+    <!-- <keep-alive include="carousel"> -->
+    <carousel :sliderData="recommandSliderDatas" />
+    <!-- </keep-alive> -->
   </div>
 </template>
 

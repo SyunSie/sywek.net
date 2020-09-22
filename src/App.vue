@@ -107,6 +107,7 @@ export default {
 * {
   margin: 0;
 }
+
 .hideEle {
   display: none;
 }
@@ -120,7 +121,7 @@ html,
 body {
   min-height: 100%;
   position: relative;
-  overflow: auto;
+  overflow: hidden;
 }
 body {
   /*/ background-color: rgb(33, 35, 37);*/
@@ -128,6 +129,8 @@ body {
   color: #eee;
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto !important;
+  overscroll-behavior: contain;
 }
 
 .blur1 {
