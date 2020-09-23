@@ -136,9 +136,9 @@ export default {
     },
   },
   mounted() {
-    let _body = document.querySelector("body");
+    // let _body = document.querySelector("body");
     this.triggerFunction = this._registerScrollEvents();
-    _body.addEventListener("scroll", this.triggerFunction);
+    window.addEventListener("scroll", this.triggerFunction);
     // console.log("mounted list", this.$children);
   },
   destroyed() {

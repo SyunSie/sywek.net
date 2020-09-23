@@ -121,7 +121,8 @@ html,
 body {
   min-height: 100%;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
+  /* overflow-x: hidden; */
 }
 body {
   /*/ background-color: rgb(33, 35, 37);*/
@@ -129,7 +130,7 @@ body {
   color: #eee;
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  overflow: auto !important;
+  /* overflow: auto !important; */
   overscroll-behavior: contain;
 }
 
@@ -146,7 +147,7 @@ body {
 }
 .marginContent {
   padding-top: 66px;
-  height: calc(100vh - 66px);
+  /* height: calc(100vh - 66px); */
 }
 .contentWidth {
   max-width: 750px;

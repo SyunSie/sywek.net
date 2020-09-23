@@ -1,6 +1,6 @@
 <template>
   <div class="contentEle_layout" ref="baseContent">
-    <imageBase64Reader v-if='editable' ref="imageReader" />
+    <imageBase64Reader v-if="editable" ref="imageReader" />
     <div
       class="content_layout"
       :class="editable?'editableRangeHover':''"
@@ -362,9 +362,9 @@ export default {
         // e1 =>  zoom image height > _maxImageH
         // e2 =>  zoom image height > _cheight
 
-        let _cwidth = _body.clientWidth - _margin * 2;
+        let _cwidth = window.innerWidth - _margin * 2;
         let _Rate = _cwidth / _imageW;
-        let _cheight = _body.clientHeight - _margin * 2;
+        let _cheight = window.innerHeight - _margin * 2;
 
         // if zoom scale will let image-y out of viewport then change _Rate.
         if (_Rate * _imageH >= _maxImageH) {
@@ -386,16 +386,17 @@ export default {
             _scrollPass = true;
             return;
           }
+
         _head.removeChild(_transfromStyle);
         _body.onresize = undefined;
         _el.classList.remove("imgZoomEvent");
         e.target.classList.remove("zoom");
         _body.removeEventListener("click", _zoomBlurFunc);
-        _body.removeEventListener("scroll", _zoomBlurFunc);
+        window.removeEventListener("scroll", _zoomBlurFunc);
       };
 
       _body.addEventListener("click", _zoomBlurFunc);
-      _body.addEventListener("scroll", _zoomBlurFunc);
+      window.addEventListener("scroll", _zoomBlurFunc);
 
       _body.onresize = _resizeFunc;
       _resizeFunc();

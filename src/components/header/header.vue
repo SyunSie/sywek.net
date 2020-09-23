@@ -157,9 +157,9 @@ export default {
   props: ["userInfo", "isLogin"],
   mounted() {
     // add scroll function
-    let _body = document.querySelector("body");
+    // let _body = document.querySelector("body");
 
-    let _scrollFunc = scrollInfo_InnerFunc(_body);
+    let _scrollFunc = scrollInfo_InnerFunc(window);
     let prevDirection = "";
     let startPixel = 0;
     const workPixel = 100;
@@ -169,10 +169,11 @@ export default {
 
       if (_scrollRet.axis == "y") {
         if (prevDirection != _scrollRet.direction) {
-          startPixel = _body.scrollTop;
+          // startPixel = _body.scrollTop;
+          startPixel = window.scrollY;
           prevDirection = _scrollRet.direction;
         }
-        if (Math.abs(_body.scrollTop - startPixel) >= workPixel) {
+        if (Math.abs(window.scrollY - startPixel) >= workPixel) {
           if (_scrollRet.direction == "forward") {
             this.hideNav = true;
             this.isScrollOnTop = false;
@@ -181,13 +182,13 @@ export default {
           }
         }
 
-        if (Math.round(_body.scrollTop) == 0) {
+        if (Math.round(window.scrollY) == 0) {
           this.isScrollOnTop = true;
           this.hideNav = false;
         }
       }
     };
-    _body.addEventListener("scroll", _func);
+    window.addEventListener("scroll", _func);
   },
 };
 </script>
