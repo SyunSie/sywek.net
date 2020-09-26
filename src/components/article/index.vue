@@ -1,6 +1,6 @@
 <template>
   <div class="articleContentH">
-    <articleNav />
+    <!-- <articleNav /> -->
     <main>
       <article>
         <articleHeader
@@ -18,7 +18,10 @@
           v-for="(section, sectionIndex) in getArticle.sections"
         />
         <hr id="articleFooter_hr" />
-        <articleFooter v-bind:editable="editable" :editArticleId="editArticleId" />
+        <articleFooter
+          v-bind:editable="editable"
+          :editArticleId="editArticleId"
+        />
       </article>
     </main>
   </div>
@@ -29,12 +32,12 @@ import _ from "lodash";
 import articleSection from "./articleSection";
 import articleHeader from "./articleHeader";
 import articleFooter from "./articleFooter";
-import articleNav from "./articleNav";
+// import articleNav from "./articleNav";
 import { createNamespacedHelpers } from "vuex";
 const { mapGetters } = createNamespacedHelpers("articleStore");
 export default {
   name: "sywekArticle",
-  components: { articleSection, articleHeader, articleFooter, articleNav },
+  components: { articleSection, articleHeader, articleFooter },
   data: () => {
     return {};
   },

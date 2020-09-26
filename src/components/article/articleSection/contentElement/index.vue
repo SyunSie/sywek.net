@@ -1,33 +1,47 @@
 <template>
   <div class="contentEle_layout" ref="baseContent">
-    <imageBase64Reader v-if="editable" ref="imageReader" />
+    <imageBase64Reader
+      v-if="editable && !contentEle.contentType"
+      ref="imageReader"
+    />
     <div
       class="content_layout"
-      :class="editable?'editableRangeHover':''"
+      :class="editable ? 'editableRangeHover' : ''"
       v-if="
-        contentEle.contentType == undefined || contentEle.content == undefined || contentTypeSelTools_display == true
+        contentEle.contentType == undefined ||
+        contentEle.content == undefined ||
+        contentTypeSelTools_display == true
       "
     >
       <button
         class="btn_contentTypeToolManager"
         v-if="
-          (contentEle.contentType == undefined || contentEle.content == undefined) &&
-            contentTypeSelTools_display == false
+          (contentEle.contentType == undefined ||
+            contentEle.content == undefined) &&
+          contentTypeSelTools_display == false
         "
         @click="contentTypeSelTools_display = true"
-      >+</button>
+      >
+        +
+      </button>
       <div v-if="contentTypeSelTools_display">
         <button
-          v-for="(t,index) in elementTypes"
+          v-for="(t, index) in elementTypes"
           :key="index"
           class="btn_contentTypeSelTools"
           :value="t"
           @click="setContentType"
-        >{{t}}</button>
+        >
+          {{ t }}
+        </button>
       </div>
     </div>
 
-    <div class="content_layout" v-else :class="editable?'editableRangeHover':''">
+    <div
+      class="content_layout"
+      v-else
+      :class="editable ? 'editableRangeHover' : ''"
+    >
       <!--content text-->
       <p
         v-if="contentEle.contentType == 'text'"
@@ -38,14 +52,23 @@
       ></p>
       <!--content image-->
 
-      <div class="imageContent_layout" v-else-if="contentEle.contentType == 'image'">
+      <div
+        class="imageContent_layout"
+        v-else-if="contentEle.contentType == 'image'"
+      >
         <figure
           class="imageContet_imageAndCpation_layout"
-          v-bind:class="[contentEle.contentStyle=='left-textAround'?'imageTextAroundLeft':contentEle.contentStyle=='right-textAround'?'imageTextAroundRight':'imageFitWidth' ]"
+          v-bind:class="[
+            contentEle.contentStyle == 'left-textAround'
+              ? 'imageTextAroundLeft'
+              : contentEle.contentStyle == 'right-textAround'
+              ? 'imageTextAroundRight'
+              : 'imageFitWidth',
+          ]"
         >
           <img
             @click="zoomImageEventFunc"
-            :class="!editable?'zoomCursor':null  "
+            :class="!editable ? 'zoomCursor' : null"
             v-bind:src="contentEle.content.imageUrl"
           />
           <figcaption
@@ -53,7 +76,9 @@
             aria-placeholder="Figure caption..."
             v-bind:contentEditable="editable"
             @blur="blur_listener($event, 'imageCaption')"
-          >{{ contentEle.content.imageCaption }}</figcaption>
+          >
+            {{ contentEle.content.imageCaption }}
+          </figcaption>
         </figure>
 
         <p
@@ -70,13 +95,19 @@
         <input
           class="videoContent_input"
           type="text"
-          v-if="contentEle.contentType == 'video' && contentEle.content.videoUrl == undefined"
+          v-if="
+            contentEle.contentType == 'video' &&
+            contentEle.content.videoUrl == undefined
+          "
           placeholder="Youtube video url..."
           @blur="_videoUrlFormat"
         />
         <iframe
           class="videoContent"
-          v-if="contentEle.contentType == 'video' && contentEle.content.videoUrl != undefined"
+          v-if="
+            contentEle.contentType == 'video' &&
+            contentEle.content.videoUrl != undefined
+          "
           v-bind:src="contentEle.content.videoUrl"
           frameborder="0"
           allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
@@ -106,7 +137,7 @@
       ></h3>
       <!-- content code -->
 
-      <code v-if="contentEle.contentType=='code'">
+      <code v-if="contentEle.contentType == 'code'">
         <div class="code">
           <div
             class="codeHeader"
@@ -117,14 +148,17 @@
           <div class="codeTable">
             <table>
               <tbody>
-                <tr v-for="(item,index) in contentEle.content.code" :key="index">
-                  <td class="tdLine">{{index+1}}</td>
+                <tr
+                  v-for="(item, index) in contentEle.content.code"
+                  :key="index"
+                >
+                  <td class="tdLine">{{ index + 1 }}</td>
                   <td
                     class="tdCode"
                     v-bind:contentEditable="editable"
                     v-text="item"
-                    @keydown="codeKeyDown($event,index)"
-                    @blur="blur_listener($event, 'code',index)"
+                    @keydown="codeKeyDown($event, index)"
+                    @blur="blur_listener($event, 'code', index)"
                   ></td>
                 </tr>
               </tbody>
@@ -132,13 +166,46 @@
           </div>
         </div>
       </code>
+      <!-- hyperlink -->
+      <div v-if="contentEle.contentType == 'hyperlink'">
+        <div
+          class="hyperlink-edit"
+          v-if="!contentEle.content.text || !contentEle.content.url"
+        >
+          <input
+            @blur="blur_listener($event, 'text')"
+            type="text"
+            placeholder="hyper link text ..."
+          />
+          <input
+            @blur="blur_listener($event, 'url')"
+            type="text"
+            placeholder="hyper link url ..."
+          />
+        </div>
+        <div
+          v-if="contentEle.content.text && contentEle.content.url"
+          class="hyperlink"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path
+              d="M10,17.55,8.23,19.27a2.47,2.47,0,0,1-3.5-3.5l4.54-4.55a2.46,2.46,0,0,1,3.39-.09l.12.1a1,1,0,0,0,1.4-1.43A2.75,2.75,0,0,0,14,9.59a4.46,4.46,0,0,0-6.09.22L3.31,14.36a4.48,4.48,0,0,0,6.33,6.33L11.37,19A1,1,0,0,0,10,17.55ZM20.69,3.31a4.49,4.49,0,0,0-6.33,0L12.63,5A1,1,0,0,0,14,6.45l1.73-1.72a2.47,2.47,0,0,1,3.5,3.5l-4.54,4.55a2.46,2.46,0,0,1-3.39.09l-.12-.1a1,1,0,0,0-1.4,1.43,2.75,2.75,0,0,0,.23.21,4.47,4.47,0,0,0,6.09-.22l4.55-4.55A4.49,4.49,0,0,0,20.69,3.31Z"
+            /></svg
+          ><a target="_blank" :href="contentEle.content.url">{{
+            contentEle.content.text
+          }}</a>
+        </div>
+      </div>
     </div>
-    <div class="contentTool_layout" v-if="editable && contentEle.contentType=='image' ">
-      <div class="imageTool" v-if="contentEle.contentType=='image'">
+    <div
+      class="contentTool_layout"
+      v-if="editable && contentEle.contentType == 'image'"
+    >
+      <div class="imageTool" v-if="contentEle.contentType == 'image'">
         <button
           value="left-textAround"
           class="toolBtn"
-          style="-webkit-transform: scaleX(-1); transform: scaleX(-1);"
+          style="-webkit-transform: scaleX(-1); transform: scaleX(-1)"
           @click="_imageStyleSelect"
         >
           <svg viewBox="100 0 369 369" xmlns="http://www.w3.org/2000/svg">
@@ -168,7 +235,11 @@
             />
           </svg>
         </button>
-        <button value="right-textAround" class="toolBtn" @click="_imageStyleSelect">
+        <button
+          value="right-textAround"
+          class="toolBtn"
+          @click="_imageStyleSelect"
+        >
           <svg viewBox="100 0 369 369" xmlns="http://www.w3.org/2000/svg">
             <path
               d="m154.667969 117.511719h-138.667969c-8.832031 0-16-7.167969-16-16s7.167969-16 16-16h138.667969c8.832031 0 16 7.167969 16 16s-7.167969 16-16 16zm0 0"
@@ -253,7 +324,11 @@
         </svg>
       </button>
       <button @click="_deleteContentEle" class="toolBtn">
-        <svg width="30px" viewBox="-40 0 427 427.00131" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          width="30px"
+          viewBox="-40 0 427 427.00131"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <path
             d="m232.398438 154.703125c-5.523438 0-10 4.476563-10 10v189c0 5.519531 4.476562 10 10 10 5.523437 0 10-4.480469 10-10v-189c0-5.523437-4.476563-10-10-10zm0 0"
           />
@@ -408,7 +483,8 @@ export default {
         //add text vaildation here...  remove other tag
 
         //<[^>]*>
-        this.contentEle.content.text = e.target.innerText
+        let _text = e.target.innerText || e.target.value;
+        this.contentEle.content.text = _text
           .replace(/<[^>]*>/, "")
           .replace(/(?:\r\n|\r|\n)/g, "<br>");
 
@@ -432,6 +508,11 @@ export default {
           .replace(/<[^>]*>/, "")
           .replace(/(?:\r\n|\r|\n)/g, " ");
         // console.log(this.contentEle.content.title);
+      } else if (contentType == "url") {
+        let _url = e.target.value;
+        if (!_url.startsWith("http://") && !_url.startsWith("https://")) return;
+        this.contentEle.content.url = _url;
+        console.log(this.contentEle);
       }
       this._updateContentEle();
     },
@@ -665,7 +746,7 @@ h3 {
 
 .imageContet_imageAndCpation_layout img {
   /* min-width: 400px; */
-  max-height: 500px;
+  /* max-height: 500px; */
   text-align: left;
   background-color: #aaa;
   border-color: transparent;
@@ -790,7 +871,30 @@ button {
   font-size: 1rem;
   min-width: 400px;
 }
+.hyperlink {
+  display: flex;
+  align-items: center;
+}
+.hyperlink > svg {
+  margin-left: 0.6rem;
+  width: 22px;
+  height: 22px;
+  stroke: wheat;
+}
+.hyperlink > a {
+  margin-left: 0.6rem;
+}
 
+.hyperlink-edit {
+  display: flex;
+  flex-direction: column;
+}
+.hyperlink-edit input {
+  width: 100%;
+
+  font: inherit;
+  border-radius: 0.6rem;
+}
 @media screen {
 }
 </style>
