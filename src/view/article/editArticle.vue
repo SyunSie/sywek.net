@@ -11,7 +11,7 @@ import { createNamespacedHelpers } from "vuex";
 const { mapActions, mapMutations } = createNamespacedHelpers("articleStore");
 import sywekArticle from "../../components/article/";
 export default {
-  name: "newArticle",
+  name: "editArticle",
   components: { sywekArticle },
   methods: {
     ...mapActions(["fetchArticle"]),

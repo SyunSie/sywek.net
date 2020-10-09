@@ -30,37 +30,58 @@
               <div class="listItems">
                 <div class="leftInfos">
                   <img
-                    @click="that.articleLinkClickEvent(info.id,info.isOpened)"
+                    @click="that.articleLinkClickEvent(info.id, info.isOpened)"
                     :src="info.headerImage"
                   />
                   <div class="listItemInfo">
-                    <div class="itemHeader" :class="info.isOpened?'itemPublish':'itemPrivate'">
+                    <div
+                      class="itemHeader"
+                      :class="info.isOpened ? 'itemPublish' : 'itemPrivate'"
+                    >
                       <h2
-                        @click="that.articleLinkClickEvent(info.id,info.isOpened)"
-                      >{{info.articleHeader}}</h2>
+                        @click="
+                          that.articleLinkClickEvent(info.id, info.isOpened)
+                        "
+                      >
+                        {{ info.articleHeader }}
+                      </h2>
                     </div>
                     <!-- <p>{{info.id}}</p> -->
                     <!-- <p>{{info.isOpened}}</p> -->
                     <div class="itemDatetime">
-                      <p>{{'Last Edit : '+info.lastEditDT}}</p>
-                      <p>{{'Post : '+info.postDT}}</p>
+                      <p>{{ "Last Edit : " + info.lastEditDT }}</p>
+                      <p>{{ "Post : " + info.postDT }}</p>
                     </div>
                     <!-- <p>{{}}</p> -->
                   </div>
                 </div>
                 <div class="itemEdit">
-                  <button class="edit-delete" @click="that.deleteArticle(info.id)">Delete</button>
-                  <button class="edit-edit" @click="that.articleLinkClickEvent(info.id,false)">Edit</button>
+                  <button
+                    class="edit-delete"
+                    @click="that.deleteArticle(info.id)"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    class="edit-edit"
+                    @click="that.articleLinkClickEvent(info.id, false)"
+                  >
+                    Edit
+                  </button>
                   <button
                     class="edit-setStatus"
-                    :class="!info.isOpened?'edit-Publish':'edit-private'"
-                    @click="that.setArticleStatus(info.id,!info.isOpened)"
-                  >{{info.isOpened?'Set Private':'Set Publish'}}</button>
+                    :class="!info.isOpened ? 'edit-Publish' : 'edit-private'"
+                    @click="that.setArticleStatus(info.id, !info.isOpened)"
+                  >
+                    {{ info.isOpened ? "Set Private" : "Set Publish" }}
+                  </button>
                 </div>
               </div>
             </inViewportItem>
 
-            <div class="endLine" v-if="that.isFetchTheEndArticlesInfo">End of line...</div>
+            <div class="endLine" v-if="that.isFetchTheEndArticlesInfo">
+              End of line...
+            </div>
           </div>
         </itemInViewportList>
       </div>
@@ -79,7 +100,7 @@ import itemInViewportList from "../../components/itemInViewportList";
 import sywekAxios from "../../reference/axiosMsgReaction";
 import Vue from "vue";
 export default {
-  name: "myArticles",
+  name: "myArticleList",
   components: { itemInViewportList, inViewportItem },
   data() {
     return {

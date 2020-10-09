@@ -1,11 +1,21 @@
 <template>
   <div class="marginContent">
     <div class="contentWidth">
-      <authorCard v-if="isAuthorInfoMode" :authorInfo="authorInfo" :readerInfo="readerInfo" />
-      <hr style="margin:2rem auto;" v-if="isAuthorInfoMode" />
+      <authorCard
+        v-if="isAuthorInfoMode"
+        :authorInfo="authorInfo"
+        :readerInfo="readerInfo"
+      />
+      <hr style="margin: 2rem auto" v-if="isAuthorInfoMode" />
       <div class="articleList">
         <div class="articleListHeader">
-          <h1>{{!isAuthorInfoMode?'Search Articles':`${authorInfo.authorName} \'s Articles`}}</h1>
+          <h1>
+            {{
+              !isAuthorInfoMode
+                ? "Search Articles"
+                : `${authorInfo.authorName} \'s Articles`
+            }}
+          </h1>
 
           <button class="listRefreshBtn" @click="refreshList">
             <svg viewBox="0 0 24 24">
@@ -15,8 +25,12 @@
             </svg>
           </button>
         </div>
-        <h3 v-if="searchStr" class="searchInfo">Searh string : {{searchStr}}</h3>
-        <h3 v-if="searchTag" class="searchInfo">Searh tag : {{searchTag}}</h3>
+        <h3 v-if="searchStr" class="searchInfo">
+          Search string : {{ searchStr }}
+        </h3>
+        <h3 v-if="searchTag" class="searchInfo">
+          Search tag : {{ searchTag }}
+        </h3>
         <itemInViewportList
           ref="list"
           :triggerRules="rules"
@@ -33,11 +47,16 @@
             >
               <div class="listItems">
                 <div class="leftInfos">
-                  <img @click="that.articleLinkClickEvent(info.id)" :src="info.headerImage" />
+                  <img
+                    @click="that.articleLinkClickEvent(info.id)"
+                    :src="info.headerImage"
+                  />
                   <div class="listItemInfo">
                     <div class="itemHeader">
-                      <h2 @click="that.articleLinkClickEvent(info.id)">{{info.articleHeader}}</h2>
-                      <p>{{info.secondHeader}}</p>
+                      <h2 @click="that.articleLinkClickEvent(info.id)">
+                        {{ info.articleHeader }}
+                      </h2>
+                      <p>{{ info.secondHeader }}</p>
                     </div>
 
                     <div class="itemDatetime">
@@ -47,18 +66,25 @@
                         post by :
                         <span
                           class="author"
-                          @click="$router.push('/user/@'+info.authorInfo.authorId)"
-                        >{{info.authorInfo.authorName}}</span>
-                        at {{info.postDT}}
+                          @click="
+                            $router.push('/user/@' + info.authorInfo.authorId)
+                          "
+                          >{{ info.authorInfo.authorName }}</span
+                        >
+                        at {{ info.postDT }}
                       </p>
-                      <p v-if="that.isAuthorInfoMode">Post at : {{info.postDT}}</p>
+                      <p v-if="that.isAuthorInfoMode">
+                        Post at : {{ info.postDT }}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             </inViewportItem>
 
-            <div class="endLine" v-if="that.isFetchTheEndArticlesInfo">End of line...</div>
+            <div class="endLine" v-if="that.isFetchTheEndArticlesInfo">
+              End of line...
+            </div>
           </div>
         </itemInViewportList>
       </div>
@@ -76,7 +102,7 @@ import authorCard from "../../components/authorCard";
 import sywekAxios from "../../reference/axiosMsgReaction";
 import Vue from "vue";
 export default {
-  name: "articles",
+  name: "articleList",
   components: { itemInViewportList, inViewportItem, authorCard },
   data() {
     return {
