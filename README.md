@@ -14,7 +14,7 @@
     
   <br/>
   
- ## Demo video
+ ## Links
 
 [ sywek.net Backend on Github](https://github.com/SyunSie/sywek_net-back)   
 
