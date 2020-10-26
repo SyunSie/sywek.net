@@ -4,13 +4,13 @@
 # Sywek.net Frontend
   
 ## 目的
-    1. 製作一個blog ,並支援註冊使用。
-    2. 由前端 Vuejs + 後端 Flask。
-    3. 前端為 SPA ，主要由 restful API 進行資料交換。
-    4. 支援RWD。
-    5. Deploy on google App Engine 。
-    6. 購買並使用Domain。
-    7. Server Side Session。
+   1. 製作一個blog ,並支援註冊使用。
+   2. 由前端 Vuejs + 後端 Flask。
+   3. 前端為 SPA ，主要由 restful API 進行資料交換。
+   4. 支援RWD。
+   5. Deploy on google App Engine 。
+   6. 購買並使用Domain。
+   7. Server Side Session。
     
   <br/>
   
